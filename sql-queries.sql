@@ -27,26 +27,27 @@ CREATE TABLE CIVic_variants (
     ID  SERIAL PRIMARY KEY, 
     CHROM  VARCHAR(20),
     POS  VARCHAR(5),
-    VAR_ID TEXT, -- The identifier of the variation, ??? same as hgnc_id??
+    VAR_ID VARCHAR(10), -- The identifier of the variation, ??? same as hgnc_id??
     REF VARCHAR(7),
-    ALT VARCHAR(20),
-    QUAL VARCHAR(20),
+    ALT VARCHAR(50), --Alternation
+    QUAL VARCHAR(20), -- ??
     FILTER VARCHAR(20),
     -- info
-    GN VARCHAR(20), -- hgnc gene symbol
-    VT VARCHAR(20), -- CIViC Variant Name
+    GN VARCHAR(8), -- hgnc gene symbol
+    VT TEXT, -- CIViC Variant Name
     -- info.csq
-    Allele VARCHAR(20), -- 
-    Consequence VARCHAR(20), 
-    SYMBOL VARCHAR(20), 
-    Entrez Gene ID VARCHAR(20), 
-    Feature_type VARCHAR(20), 
-    Feature VARCHAR(20), 
-    HGVSc VARCHAR(20), 
-    HGVSp VARCHAR(20), 
-    CIVic_Var_Name VARCHAR(20), 
-    CIVic_Var_ID VARCHAR(20), 
-    CIVic_Var_Aliases VARCHAR(20), 
+    Allele VARCHAR(50), -- verilerde
+    Consequence VARCHAR(50), -- missensed variant, Splice_Donor variant
+    SYMBOL VARCHAR(8),  -- hgnc gene symbol
+    Entrez_Gene_ID VARCHAR(10), -- ?
+    Feature_type VARCHAR(30), 
+    Feature VARCHAR(20),  --ENST00000415913
+    HGVSc VARCHAR(40), --
+    HGVSp VARCHAR(40), 
+    CIVic_Var_Name TEXT, --CIViC Variant Name
+    CIVic_Var_ID VARCHAR(10),  -- The identifier of the variation,
+    ---- BURADA KALDIK --- 
+    CIVic_Var_Aliases VARCHAR(50), 
     CIVic_HGVS VARCHAR(20), 
     Allele_Registry_ID VARCHAR(20), 
     ClinVar_ID VARCHAR(20), 
