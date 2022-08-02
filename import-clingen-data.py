@@ -4,15 +4,15 @@ import os
 import pandas as pd
 import sys
 import psycopg2 as psql
-import clingen_db_config
+import db_config
 
 def db_connect():
     try:
         conn = psql.connect(
-            host=clingen_db_config.DB_HOST,
-            database=clingen_db_config.DB_NAME,
-            user=clingen_db_config.DB_USER,
-            password=clingen_db_config.DB_PWD)
+            host=db_config.DB_HOST,
+            database=db_config.CLINGEN_DB_NAME,
+            user=db_config.DB_USER,
+            password=db_config.DB_PWD)
 
         print("Database connected successfully")
         return conn
@@ -87,12 +87,12 @@ def import_clingen_data(conn):
             insert_into_db(conn, query, record)
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
     
-    conn = db_connect()
+#     conn = db_connect()
 
-    import_clingen_data(conn)
+#     import_clingen_data(conn)
     
-    if conn:
-        conn.close()
+#     if conn:
+#         conn.close()
         
