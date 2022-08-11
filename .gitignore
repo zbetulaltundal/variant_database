@@ -1,3 +1,8 @@
 # created by virtualenv automatically
-*
+.*
 __pycache__
+pyenv.cfg
+Lib
+Scripts
+Include
+data
