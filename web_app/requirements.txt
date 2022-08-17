@@ -1,0 +1,9 @@
+###### Requirements without Version Specifiers ######
+flask
+numpy
+pandas
+psycopg2
+datetime
+Werkzeug
+
+###### Requirements with Version Specifiers ######

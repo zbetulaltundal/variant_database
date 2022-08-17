@@ -20,7 +20,6 @@ def import_civic_data(conn):
     vcf_name = 'nightly-civic_accepted_and_submitted.vcf'
     vcf_reader = vcf.Reader(open(f'{vcf_path}\\{vcf_name}'))
 
-    #vcf_cols = vcf_reader._column_headers
     csq_fields = get_csq_fields(vcf_reader)
 
     for rec in vcf_reader:
@@ -37,11 +36,7 @@ def import_civic_data(conn):
             if key =="CSQ":
                 for csq_val, csq_key in zip(val[0].split("|"), csq_fields):
                     t_csq_val = main.check_var(csq_val)
-                    print(t_csq_val)
-                    print(type(t_csq_val))
                     dict["INFO."+csq_key] = t_csq_val
-                    
-                    print(dict["INFO."+csq_key])
             else:
                 dict["INFO."+key] = main.check_var(val)
 
@@ -60,9 +55,10 @@ def import_civic_data(conn):
 
         format_spec =f'VALUES ({42*"%s,"}%s);'
         tupl = tuple(dict.values())
-        print("tupl len")
-        print(len(tupl))
+
+        # 89th line gives an exception
         if len(tupl) == 33: 
             print(tupl)
             continue
+
         main.insert_into_db(conn, f'{query}{format_spec}', tupl)

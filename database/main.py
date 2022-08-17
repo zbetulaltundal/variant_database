@@ -1,14 +1,15 @@
 # @author: Zeynep Betül Altundal
 
 from asyncio.windows_events import NULL
-from cmath import nan
 from pydoc import cli
+import pandas as pd
 import clingen_import
 import civic_import
 import clinvar_import
 import db_config
 import psycopg2 as psql
 import sys
+from collections.abc import Iterable
 
 # ismi verilen veritabanına bağlantıyı sağlar
 def db_connect(db_name):
@@ -49,6 +50,7 @@ def insert_into_db(conn, query, record):
         print ("pgcode:", err.pgcode, "\n")
         conn.rollback()
 
+
 # veritabanına verilen record'u verilen query ile insert eder.
 # insert edilen yeni satırın id'sini döner.
 def insert_into_db_returning_id(conn, query, record):
@@ -77,14 +79,24 @@ def insert_into_db_returning_id(conn, query, record):
         print ("pgcode:", err.pgcode, "\n")
         conn.rollback()
 
+def is_iterable(var):
+    try:
+        iter(var)
+        return True
+    except TypeError:
+        return False
+
 # verilen değişkenin (Var) geçerli bir değere sahip olup olmadığını kontrol eden fonksiyon.
 def check_var(var):
     if type(var) == list:
         if len(var) == 0: return None
-        elif (len(var) == 1) and (check_var(var[0] == '.') == None): return None
+        elif (len(var) == 1) and( (check_var(var[0])==None) or (var[0] == '.')): return None
         else: return var
-    elif var==None or (var == nan) or (var  == NULL) or (var == False) or (var == 'None') or (var  == '') or (len(var) == 0): return None
-    else: return var
+    elif var==None or pd.isna(var) or (var  == NULL) or (var == False) or (var == 'None') or (var  == '') or (var == 'N/A'): return None
+    elif is_iterable(var):
+        if len(var) == 0: return None
+    
+    return var
 
 
 # geeks4forgeeks
@@ -117,6 +129,14 @@ def listToString(list):
     except Exception as err:
         print ("Exception has occured:", err)
         print ("Exception type:", type(err))
+        err_type, err_obj, traceback = sys.exc_info()
+        line_num = traceback.tb_lineno
+        # print the connect() error
+        print ("\nERROR:", err, "on line number:", line_num)
+        print ("traceback:", traceback, "-- type:", err_type)
+
+        # psycopg2 extensions.Diagnostics object attribute
+        print ("\nextensions.Diagnostics:", err.diag)
 
 
 # EN
@@ -130,28 +150,29 @@ def search_dict(dict, key):
         if val == '': 
             val = None
             return None
-        if (val == 'None') or (val == nan) or (val  == NULL) or (val  == ''): return None
+        if check_var(val): return None
         else: 
             if type(val) == list:
-                if len(val) == 0 or len(val) == 1: return val[0]
+                if len(val) == 0: return None
+                elif len(val) == 1: return val[0]
             return val
     else: return None
 
 if __name__ == "__main__":
     
-    # conn = db_connect(db_config.CIVIC_DB_NAME)
+    conn = db_connect(db_config.CIVIC_DB_NAME)
 
-    # #civic_import.import_CIVic_data(conn)
-    
-    # if conn:
-    #    conn.close()
-
-    conn = db_connect(db_config.CLINGEN_DB_NAME)
-
-    clingen_import.import_clingen_data(conn)
+    civic_import.import_civic_data(conn)
     
     if conn:
        conn.close()
+
+    # conn = db_connect(db_config.CLINGEN_DB_NAME)
+
+    # clingen_import.import_clingen_data(conn)
+    
+    # if conn:
+    #    conn.close()
 
     # conn = db_connect(db_config.CLINVAR_DB_NAME)
 

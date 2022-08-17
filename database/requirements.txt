@@ -1,0 +1,6 @@
+###### Requirements without Version Specifiers ######
+pyvcf
+pandas
+psycopg2
+
+###### Requirements with Version Specifiers ######

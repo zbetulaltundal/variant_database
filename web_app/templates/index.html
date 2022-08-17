@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+{% block title %}Index Page{% endblock %}
+{% block content %}
+<div>
+    <p>Index page </p>
+    <form action="/index"  method = "POST" 
+    enctype = "multipart/form-data">
+        <div class="form-group">
+          <label for="vcfForm">Example file input</label>
+          <p><input type="file" class="form-control-file" id="vcfForm" name="vcf_file"></p>
+          <p><input type = "submit" value="Submit"/></p>
+        </div>
+      </form>
+</div>
+
+{% endblock %}
