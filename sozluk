@@ -1,1 +1,23 @@
+import sqlite3 # Sqlite'yı dahil ediyoruz
 
+con = sqlite3.connect("civic_terimleri") # Veritabanına bağlanıyoruz.
+cursor = con.cursor()
+
+def tablo_olustur():
+    cursor.execute("CREATE TABLE IF NOT EXISTS civic_terimleri(İsim TEXT, aciklama TEXT);")
+    con.commit()
+tablo_olustur()
+
+civicler = open("civic.txt", "r")
+listemiz = civicler.readlines()
+civicler.close()
+
+for isim in listemiz:
+    print(isim)
+    aciklama = input("lütfen açıklamasını giriniz..")
+    print(aciklama)
+    cursor.execute(f"""INSERT INTO civic_terimleri (İsim, aciklama) \
+                    VALUES ('{isim}', '{aciklama}')""")
+
+    con.commit()
+con.close()
