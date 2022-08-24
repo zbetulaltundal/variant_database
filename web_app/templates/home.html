@@ -3,7 +3,14 @@
 {% block content %}
 <div class="content-container bg-light">
     <div class="container mx-auto py-5 bg-light">
-      <a href="{{ url_for('index_page') }}">Search for a variant</a>
+      <form action="/"  method = "POST" 
+    enctype = "multipart/form-data">
+        <div class="form-group">
+          <label for="vcfForm">Upload a VCF file</label>
+          <p><input type="file" class="form-control-file" id="vcfForm" name="vcf_file"></p>
+          <p><input type = "submit" value="Submit"/></p>
+        </div>
+      </form>
     </div>
 </div>
 {% endblock %}

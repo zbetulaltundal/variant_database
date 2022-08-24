@@ -7,3 +7,10 @@ datetime
 Werkzeug
 
 ###### Requirements with Version Specifiers ######
+
+isim: açıklama biçiminde bir sözlük oluşturduk
+sitede farklı dblerdeki tabloları görüntüleyebiliyoruz ama düzenlenmeye 
+ihtiyacı var.
+
+
+

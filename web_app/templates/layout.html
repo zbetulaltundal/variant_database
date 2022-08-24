@@ -17,49 +17,64 @@
 </head>
 
 <body>
-  <header>
-    <nav class="navbar navbar-expand-lg navbar-light bg-warning">
-      <div class="container-fluid">
-        <div class="row w-100 d-flex justify-between">
-          <div class="col-8">
-            <div class="row d-flex">
-              <a class="navbar-brand col-2 me-0" href="{{ url_for('home_page') }}">Variant Scanner</a>
-              <ul class="navbar-nav col-10 px-5">
-                <li class="nav-item">
-                  <a class="nav-link active" aria-current="page" href="{{ url_for('home_page') }}">Home</a>
-                </li>
+  <div id="page-container">
+    <div id="content-wrap">
+      <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-warning">
+          <div class="container-fluid">
+            <div class="row w-100 d-flex justify-between">
+              <div class="col-8">
+                <div class="row d-flex">
+                  <a class="navbar-brand col-2 me-0" href="{{ url_for('home_page') }}">Variant Scanner</a>
+                  <ul class="navbar-nav col-10 px-5">
+                    <li class="nav-item">
+                      <a class="nav-link active" aria-current="page" href="{{ url_for('home_page') }}">Home</a>
+                    </li>
+              </div>
+            </div>
           </div>
-        </div>
+        </nav>
+      </header>
+
+      <div class="content-container">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+
+        {% for message in messages %}
+        <p class="text-danger text-center position-absolute w-100 py-3">{{message}}</p>
+        {% endfor %}
+
+        {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+        <!-- This content part is changing according to Results -->
+        <!-- Jinja template engine renders it -->
       </div>
-    </nav>
-  </header>
 
-  <div class="content-container">
-    {% block content %}{% endblock %}
-    <!-- This content part is changing according to Results -->
-    <!-- Jinja template engine renders it -->
-  </div>
-
-  <footer class="border-top text-center text-lg-start w-100 mt-5">
-    <!-- Copyright -->
-    <div class="text-center p-3">
-      &copy; 2022 ITU Bioinformatics Lab
+      <footer id="footer" class="border-top text-center text-lg-start w-100 mt-5">
+        <!-- Copyright -->
+        <div class="text-center p-3">
+          &copy; 2022 ITU Bioinformatics Lab
+        </div>
+        <!-- Copyright -->
+      </footer>
     </div>
-    <!-- Copyright -->
-  </footer>
-
+  </div>
+  
   {% block script %}
- <!-- Bootstrap Javascripts -->  
- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Bootstrap Javascripts -->  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- Import Jquery -->
-  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <!-- Import Jquery -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
-  <!-- Import our custom JavaScript -->
-  <!-- <script src="{{ url_for('static', filename='app.js') }}"></script> -->
-  <!-- {% endblock %}
+    <!-- Import our custom JavaScript -->
+    <!-- <script src="{{ url_for('static', filename='app.js') }}"></script> -->
+    <!-- {% endblock %} -->
+
 </body>
 
 </html>

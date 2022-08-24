@@ -3,9 +3,9 @@
 from asyncio.windows_events import NULL
 from pydoc import cli
 import pandas as pd
-import clingen_import
-import civic_import
-import clinvar_import
+import clingen_import as clingen
+import civic_import as civic
+import clinvar_import_v1 as clinvar
 import db_config
 import psycopg2 as psql
 import sys
@@ -138,7 +138,6 @@ def listToString(list):
         # psycopg2 extensions.Diagnostics object attribute
         print ("\nextensions.Diagnostics:", err.diag)
 
-
 # EN
 # Search if the dictionary contains the field as a key.
 # TR
@@ -150,34 +149,29 @@ def search_dict(dict, key):
         if val == '': 
             val = None
             return None
-        if check_var(val): return None
+        if check_var(val) == None: return None
         else: 
             if type(val) == list:
                 if len(val) == 0: return None
                 elif len(val) == 1: return val[0]
+                
             return val
     else: return None
 
 if __name__ == "__main__":
     
-    conn = db_connect(db_config.CIVIC_DB_NAME)
+    # conn = db_connect(db_config.CIVIC_DB_NAME)
 
-    civic_import.import_civic_data(conn)
+    # civic.import_civic_data(conn)
+    
+    # conn = db_connect(db_config.CLINGEN_DB_NAME)
+
+    # clingen.import_clingen_data(conn)
+    
+    conn = db_connect(db_config.CLINVAR_DB_NAME)
+
+    clinvar.import_clinvar_data(conn)
     
     if conn:
        conn.close()
-
-    # conn = db_connect(db_config.CLINGEN_DB_NAME)
-
-    # clingen_import.import_clingen_data(conn)
-    
-    # if conn:
-    #    conn.close()
-
-    # conn = db_connect(db_config.CLINVAR_DB_NAME)
-
-    # clinvar_import.import_clinvar_data(conn)
-    
-    # if conn:
-    #    conn.close()
         

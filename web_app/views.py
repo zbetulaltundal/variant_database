@@ -4,143 +4,211 @@ from os import error
 from werkzeug.utils import redirect, secure_filename
 import config
 from flask import render_template, request, flash, url_for
-import main
+from main import psql, err_handler, check_var, listToString
 import vcf 
 import numpy as np
+import pandas as pd
+
+clingen_cols = ['GENE_SYMBOL', 'HGNC_ID', 'DISEASE_LABEL', 'MONDO_DISEASE_ID', 
+    'MOI', 'SOP', 'CLASSIFICATION', 'ONLINE_REPORT', 'CLASSIFICATION_DATE', 'GCEP']
+
+civic_cols = ['CHROM' ,  'POS' ,  'VAR_ID' ,  'REF' ,  'ALT' , 'QUAL', 'FILTER', 'GN', 'VT', 'Allele', 'Consequence', 'SYMBOL', 
+        'Entrez_Gene_ID', 'Feature_type', 'Feature', 'HGVSc', 'HGVSp', 'CIViC_Var_Name', 'CIViC_Var_ID', 'CIViC_Var_Aliases', 
+        'CIViC_HGVS', 'Allele_Registry_ID', 'ClinVar_ID', 'CIViC_Var_Ev_Score', 'CIViC_Ent_Type', 
+        'CIViC_Ent_ID', 'CIViC_Ent_URL', 'CIViC_Ent_Src', 'CIViC_Ent_Var_Origin', 'CIViC_Ent_Stat',
+        'CIViC_Clin_Sig', 'CIViC_Ent_Dir', 'CIViC_Ent_Disease', 'CIViC_Ent_Drugs', 'CIViC_Ent_Drug_Int', 
+        'CIViC_Ev_Phenotypes', 'CIViC_Ev_Level', 'CIViC_Ev_Rating', 'CIViC_Assertion_ACMG_Codes',
+        'CIViC_Assertion_AMP_Cat', 'CIViC_Assertion_NCCN_Guid', 'CIViC_Assertion_Regu_Appr_Guid', 
+        'CIViC_Assertion_FDA_Comp_Test_Guid']
+
+id_cols =  ['CHROM', 'POS', 'REF', 'ALT']
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in config.ALLOWED_EXTENSIONS
 
 # home page
 def home_page():
+    return render_template("home.html")
 
-    conn = main.db_connect(config.CLINVAR_DB_NAME)
+def vcf_to_df(file):
+    """ Store data in the vcf file on a pandas dataframe 
+    / Vcf dosyasındaki verileri bir pandas dataframe'e depolar
 
-    try: 
-        curr = conn.cursor()
-        print(request)
-        if request.method == 'POST':
-            # return upload_vcf_file(request)
-            print("post request")
-        curr.close()
-        conn.commit()
-    except error:
-        print(error)
-        conn.rollback()
-    finally:
-        conn.close()
-        return render_template("home.html")
+    Parameters / Parametreler
+    ----------
+    file : str
+        The vcf file (vcf dosyası)
 
-def vcf_to_rec(file):
+    Returns / Dönüş değeri
+    -------
+    variants_df
+        variant datas in the pandas dataframe format
+        / pandas dataframe formatındaki varyant verileri
+    """
 
     data = file.stream.read()
     stream = io.StringIO(data.decode("UTF8"), newline=None)
     vcf_reader = vcf.Reader(stream)
+    variants_arr = []
     for rec in vcf_reader:
-       return rec
+        new_row = [check_var(rec.CHROM), check_var(rec.POS), check_var(rec.REF), check_var(listToString(rec.ALT))]
+        variants_arr.append(new_row)
     
-    return None
+    variants_df = pd.DataFrame(variants_arr, columns=id_cols)
+    return variants_df
 
-def success_page():
-    return render_template('success.html')
+def variant_info():
+    return render_template('variant-info.html')
+   
+def record_cmpr(row, prev_rec):
+    if row != None and prev_rec != None:
+        row_id = (row[1], row[2], row[4], row[5])
+        prev_rec_id = (prev_rec[1], prev_rec[2], prev_rec[4], prev_rec[5])
+        if row_id == prev_rec_id:
+            return True
+    elif row == prev_rec: return True
+    
+    return False
 
-def index_page():
-    return render_template('index.html')
 
+def fetch_from_db(db_name, cols, where):
 
+    select = "SELECT * "
+    fr = f"FROM {db_name}_variants "
 
-# veritabanına verilen record'u verilen query ile insert eder
-def fetch_from_db(conn, query):
     try:
+        query = select + fr + where
+        conn = psql.connect(
+            host=config.HOST_NAME,
+            port=config.PORT_NAME,
+            database=db_name,
+            user=config.DB_USER,
+            password=config.DB_PWD
+            )
         cur = conn.cursor() 
         cur.execute(query)
-        result = cur.fetchall()
-        print("variant info")
-        print(result)
-        # variants = np.zeros([1, 4], dtype='str')
-        # for row in result:
-        #     newRow = np.array(row)
-        #     variants = np.vstack([variants, newRow])
-
-        # variants = np.delete(variants, 0, 0)
-
+        #print(cur.mogrify(query))
+        res = cur.fetchall()
         cur.close()
         conn.commit()
+        variants = np.empty([1, len(cols)])
+        prev_rec = None
+        for row in res:
+            if record_cmpr(row, prev_rec) == False:
+                newRow = np.array(row[1:])
+                variants = np.vstack([variants, newRow])
+            
+            prev_rec = row
+
+        variants = np.delete(variants, 0, 0)
+        variants_df = pd.DataFrame(variants, columns=[cols, ])
+    
+        return variants_df
+
     except Exception as err:
-        print ("Exception has occured:", err)
-        print ("Exception type:", type(err))
-        err_type, err_obj, traceback = sys.exc_info()
-        line_num = traceback.tb_lineno
-        # print the connect() error
-        print ("\npsycopg2 ERROR:", err, "on line number:", line_num)
-        print ("psycopg2 traceback:", traceback, "-- type:", err_type)
-
-        # psycopg2 extensions.Diagnostics object attribute
-        print ("\nextensions.Diagnostics:", err.diag)
-
-        # print the pgcode and pgerror exceptions
-        print ("pgerror:", err.pgerror)
-        print ("pgcode:", err.pgcode, "\n")
+        err_handler(err)
         conn.rollback()
-    finally:
-        return render_template('variant-info.html', variant_info=result)
+        return None
 
+def fetch_from_clinvar(where, cols):
+    select = "SELECT *"
+    fr = "FROM variant"
 
-def get_variant_data(rec):
+    try:
+        query = select + fr + where
+        conn = psql.connect(
+            host=config.HOST_NAME,
+            port=config.PORT_NAME,
+            database='clinvar',
+            user=config.DB_USER,
+            password=config.DB_PWD
+            )
+        cur = conn.cursor() 
+        cur.execute(query)
+        #print(cur.mogrify(query))
+        res = cur.fetchall()
+        cur.close()
+        conn.commit()
+        variants = np.empty([1, len(cols)])
+        prev_rec = None
+        for row in res:
+            if record_cmpr(row, prev_rec) == False:
+                newRow = np.array(row[1:])
+                variants = np.vstack([variants, newRow])
+            
+            prev_rec = row
 
-    conn = main.db_connect('CIVic')
+        variants = np.delete(variants, 0, 0)
+        variants_df = pd.DataFrame(variants, cols)
+    
+        return variants_df
 
-    # VARIANTS
-    CHROM = main.check_var(rec.CHROM)
-    POS = main.check_var(rec.POS)
-    REF = main.check_var(rec.REF)
-    ALT = main.check_var(main.listToString(rec.ALT))
+    except Exception as err:
+        err_handler(err)
+        conn.rollback()
+        return None
 
-    main.db_connect('CIVic')
-    select = "SELECT (CIViC_Ent_Disease, CIViC_Ent_Drugs, CIViC_Clin_Sig)"
-    fr = "FROM civic_variants"
-    where = f"""civic_variants.ALT='{ALT}' AND\
-        civic_variants.REF='{REF}' AND\
-        civic_variants.POS='{POS}' AND\
-        civic_variants.CHROM='{CHROM}'"""
-    query = select + fr + where
-    fetch_from_db(conn, query)
+def get_variant_data(df):
 
-    if conn:
-       conn.close()
+    civic_data = np.empty([1, 43])
 
+    for index, row in df.iterrows():
+            CHROM = row['CHROM']
+            ALT = row['ALT']
+            REF = row['REF']
+            POS = row['POS']
+
+            # select = "SELECT (CHROM ,  POS ,  VAR_ID ,  REF ,  ALT ,  QUAL ,  FILTER ,\
+            #              GN ,  VT ,  Allele ,  Consequence ,  SYMBOL ,  Entrez_Gene_ID ,  Feature_type ,  Feature ,  HGVSc , \
+            #              HGVSp ,  CIViC_Var_Name ,  CIViC_Var_ID ,  CIViC_Var_Aliases ,  CIViC_HGVS , \
+            #              Allele_Registry_ID ,  ClinVar_ID ,  CIViC_Var_Ev_Score ,  CIViC_Ent_Type , \
+            #              CIViC_Ent_ID ,  CIViC_Ent_URL ,  CIViC_Ent_Src ,  CIViC_Ent_Var_Origin ,\
+            #              CIViC_Ent_Stat ,  CIViC_Clin_Sig ,  CIViC_Ent_Dir , \
+            #              CIViC_Ent_Disease ,  CIViC_Ent_Drugs ,  CIViC_Ent_Drug_Int , \
+            #              CIViC_Ev_Phenotypes ,  CIViC_Ev_Level ,  CIViC_Ev_Rating , \
+            #              CIViC_Assertion_ACMG_Codes ,  CIViC_Assertion_AMP_Cat ,\
+            #              CIViC_Assertion_NCCN_Guid ,  CIViC_Assertion_Regu_Appr_Guid ,\
+            #              CIViC_Assertion_FDA_Comp_Test_Guid)"
+            
+            where = f"""WHERE ALT='{ALT}' AND\
+                    REF='{REF}' AND\
+                    POS='{POS}' AND\
+                    CHROM='{CHROM}'"""
+
+            new_civic_data = fetch_from_db("civic", civic_cols, where)
+
+            #new_clingen_data = fetch_from_db("clingen", clingen_cols, where)
+            # clinvar_data = fetch_from_clinvar(where)
+
+            civic_data = np.vstack([civic_data, new_civic_data])
+            #clingen_data = np.vstack([clingen_data, new_clingen_data])
+            
+
+    #var_infos_df = pd.DataFrame([civic_data, clingen_data], columns=[civic_cols, clingen_cols])
+    civic_data = np.delete(civic_data, 0, 0)
+    var_infos_df = pd.DataFrame(civic_data, columns=civic_cols)
+
+    return var_infos_df
 
 def upload_vcf_file():
     try:
         if request.method == 'POST':
-            # return upload_vcf_file(request)
-            print(request.files['vcf_file'])
             file = request.files['vcf_file']
-            if file and file.filename == '':
-                flash('No file selected for uploading')
-                return render_template("index.html")
+            if file.filename == '':
+                flash('Please select a file')
             elif file and allowed_file(file.filename):
-                rec = vcf_to_rec(file) # converts FileStorage data to vcf record
-                if rec != None:
-                   #fetched_data = get_variant_data(rec)
-                   #print(fetched_data)
-                   flash('File uploaded succesfully')
-                   return render_template("success.html")
-                else:
-                   return render_template("index.html")
+                var_list = vcf_to_df(file) # converts FileStorage data to vcf record
+                fetched_data = get_variant_data(var_list)
+                print(fetched_data)
+                flash('File uploaded succesfully')
+                print("column_names")
+                print(fetched_data.columns.values)
+                return render_template('variant-info.html',  column_names=fetched_data.columns.values, row_data=list(fetched_data.values.tolist()), zip=zip)
             else:
                 flash('Only vcf files are allowed')
-                return render_template("index.html")
-        else:
-            return render_template('index.html')
+        
+        return render_template('home.html')
 
     except Exception as err:
-        print ("Exception has occured:", err)
-        print ("Exception type:", type(err))
-        err_type, err_obj, traceback = sys.exc_info()
-        line_num = traceback.tb_lineno
-        # print the connect() error
-        print ("\nERROR:", err, "on line number:", line_num)
-        print ("traceback:", traceback, "-- type:", err_type)
-        
-        return render_template('index.html')
+        err_handler(err)
+        return render_template('home.html')

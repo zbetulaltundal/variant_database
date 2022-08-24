@@ -21,6 +21,7 @@ def import_civic_data(conn):
     vcf_reader = vcf.Reader(open(f'{vcf_path}\\{vcf_name}'))
 
     csq_fields = get_csq_fields(vcf_reader)
+    print(csq_fields)
 
     for rec in vcf_reader:
         dict = {}
@@ -60,5 +61,6 @@ def import_civic_data(conn):
         if len(tupl) == 33: 
             print(tupl)
             continue
+        
 
         main.insert_into_db(conn, f'{query}{format_spec}', tupl)

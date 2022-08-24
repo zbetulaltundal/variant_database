@@ -1,3 +1,14 @@
+-- v.1.0
+
+select CHROM, POS, REF, ALT  from variant;
+
+SELECT * FROM INFO WHERE id IN 
+   (SELECT id FROM variant 
+      WHERE ALT='{ALT}' AND
+            REF='{REF}' AND
+            POS='{POS}' AND
+            CHROM='{CHROM}')
+
 
 drop table INFO;
 drop table VARIANT;
@@ -195,3 +206,45 @@ CREATE TABLE VARIANT (
 );
 
 -- create domain ALT as TEXT check (value !~ '[\t\v\b\r\n\cd95\cd94\2c]');
+
+
+-- v2.0
+
+CREATE TABLE variants (
+    ID  SERIAL PRIMARY KEY, 
+    CHROM  TEXT NOT NULL,-- An identifier from the reference genome. All entries for a specific CHROM should form a contiguous block within the VCF file.(Alphanumeric String, Required)
+    POS  INT NOT NULL,-- Positions are sorted numerically, in increasing order, within each reference sequence CHROM. (Integer, Required)
+    CLINVAR_ID TEXT, -- ClinVar Variation ID"+
+    REF TEXT,
+    ALT TEXT,
+    QUAL NUMERIC,
+    FILTER TEXT,
+    AF_ESP NUMERIC,
+    AF_EXAC NUMERIC,
+    AF_TGP NUMERIC,
+    ALLELEID INT,
+    CLNHGVS TEXT,
+    CLNVC TEXT, --Variant type +
+    CLNVCSO TEXT, --Sequence Ontology id for variant type +
+    DBVARID TEXT, --nsv accessions from dbVar for the variant
+    ORIGIN TEXT, --Allele origin. One or more of the following values may be added: 0 - unknown; 1 - germline; 2 - somatic; 4 - inherited; 8 - paternal; 16 - maternal; 32 - de-novo; 64 - biparental; 128 - uniparental; 256 - not-tested; 512 - tested-inconclusive; 1073741824 - other
+    RS TEXT, --dbSNP ID (i.e. rs number)
+    SSR INT --Variant Suspect Reason Codes. One or more of the following values may be added: 0 - unspecified, 1 - Paralog, 2 - byEST, 4 - oldAlign, 8 - Para_EST, 16 - 1kg_failed, 1024 - other
+    CLNDNINCL_DISEASE_NAME TEXT,
+    CLNDNINCL_DISEASE_ID TEXT,
+    CLNDN_DISEASE_NAME TEXT,
+    CLNDN_DISEASE_ID TEXT,
+    SRC TEXT,
+    SRC_ID TEXT,
+    CLNREVSTAT TEXT,
+    Gene_Sym TEXT,
+    Gene_ID TEXT,
+    Seq_Ont_ID TEXT,
+    Mol_Conseq TEXT,
+    CLNSIGINCL TEXT,
+    CLNSIGCONF TEXT,
+    CLNSIG TEXT, --Clinical significance for this single variant; multiple values are separated by a vertical bar
+    CLNDISDB_NAME TEXT,
+    CLNDISDB_ID TEXT,
+    ABBRV TEXT
+);
