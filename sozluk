@@ -1,0 +1,70 @@
+ID  SERIAL PRIMARY KEY
+    CHROM
+    POS
+    VAR_ID
+    REF
+    ALT
+    QUAL
+    FILTER
+    GN
+    VT
+    Allele
+    Consequence
+    SYMBOL
+    Entrez_Gene_ID
+    Feature_type
+    Feature
+    HGVSc
+    HGVSp
+    CIVic_Var_Name
+    CIVic_Var_ID
+    CIVic_Var_Aliases
+    CIVic_HGVS
+    Allele_Registry_ID
+    ClinVar_ID
+    CIViC_Var_Ev_Score
+    CIViC_Ent_Type
+    CIViC_Ent_ID
+    CIViC_Ent_URL
+    CIViC_Ent_Src
+    CIViC_Ent_Var_Origin
+    CIViC_Ent_Stat
+    CIViC_Clin_Sig
+    CIViC_Ent_Dir
+    CIViC_Ent_Disease
+    CIViC_Ent_Drugs
+    CIViC_Ent_Drug_Int
+    CIViC_Ev_Phenotypes
+    CIViC_Ev_Level
+    CIViC_Ev_Rating -
+    CIViC_Assertion_ACMG_Codes
+    CIViC_Assertion_AMP_Cat
+    CIViC_Assertion_NCCN_Guid
+    CIViC_Assertion_Regu_Appr_Guid
+    CIViC_Assertion_FDA_Comp_Test_Guid
+    
+    
+
+import sqlite3 # Sqlite'yı dahil ediyoruz
+
+con = sqlite3.connect("civic_terimleri") # Veritabanına bağlanıyoruz.
+cursor = con.cursor()
+
+def tablo_olustur():
+    cursor.execute("CREATE TABLE IF NOT EXISTS civic_terimleri(İsim TEXT, aciklama TEXT);")
+    con.commit()
+tablo_olustur()
+
+civicler = open("civic.txt", "r")
+listemiz = civicler.readlines()
+civicler.close()
+
+for isim in listemiz:
+    print(isim)
+    aciklama = input("lütfen açıklamasını giriniz..")
+    print(aciklama)
+    cursor.execute(f"""INSERT INTO civic_terimleri (İsim, aciklama) \
+                    VALUES ('{isim}', '{aciklama}')""")
+
+    con.commit()
+con.close()
