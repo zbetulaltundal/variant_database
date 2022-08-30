@@ -1,6 +1,26 @@
 {% extends "layout.html" %}
 {% block title %}Nomenclature{% endblock %}
 {% block content %}
-<div>
+<div class="container mx-auto my-3">
     <p class="col-6 fs-2 fw-bold">Nomenclature</p>
+    {% if isNone %}
+        <h1>Data could not be found.</h1>
+    {% else %}
+    <div class="container">
+        <div class="row d-flex justify-content-center">
+            {% for index, row in nomenc.iterrows() %}
+            <div class="card text-center">
+                <div class="card-header fw-bold row d-flex justify-content-center">
+                    <p class="fs-5">{{ row['WORD'] }}</h3>
+                </div>
+                <div class="card-body">
+                    <p>{{ row['DEFINITION'] }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 </div>
+
+{% endblock %}

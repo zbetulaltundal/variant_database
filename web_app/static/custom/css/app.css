@@ -64,3 +64,14 @@ table td:hover{
 .button:hover{
   color:#4E9CAF;
 }
+
+.card{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 33%;
+}
+
+.card-header{
+  background: none !important;
+}
