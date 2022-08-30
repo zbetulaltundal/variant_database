@@ -1,24 +1,21 @@
 import os
 import vcf
 import main
+import pandas as pd
+
+def tsv_to_df(folder_path, filename):
+    return pd.read_csv(folder_path + filename)
 
 def import_PharmGKB(conn):
     
     # open the csv data
     cwd = os.getcwd()  # Get the current working directory
-    vcf_path = f'{cwd}\\data\\CIVic'
-    vcf_name = 'nightly-civic_accepted_and_submitted.vcf'
-    vcf_reader = vcf.Reader(open(f'{vcf_path}\\{vcf_name}'))
-
-    # open .tsv file
-    with open("GeekforGeeks.tsv") as f:
-   
-        # Read data line by line
-        for line in f:
-            
-            # split data by tab
-            # store it in list
-            l=line.split('\t')
-            
-            # append list to ans
-            print(l)
+    folder_path = f'{cwd}\\data\\PharmGKB\\clinical\\'
+    filenames = ["clinical_ann_alleles.tsv", "clinical_ann_evidence.tsv", "clinical_annotations.tsv"]
+    data_frames = []
+    for filename in filenames:
+        df = tsv_to_df(folder_path, filename)
+        data_frames.append(df)
+        print(df)
+    
+    

@@ -168,10 +168,14 @@ if __name__ == "__main__":
 
     # clingen.import_clingen_data(conn)
     
+    # conn = db_connect(db_config.CLINVAR_DB_NAME)
+
+    # clinvar.import_clinvar_data(conn)
+    
+    # if conn:
+    #    conn.close()
+
+    
     conn = db_connect(db_config.CLINVAR_DB_NAME)
 
-    clinvar.import_clinvar_data(conn)
-    
-    if conn:
-       conn.close()
         
