@@ -7,6 +7,10 @@
   padding-bottom: 2.5rem;    /* Footer height */
 }
 
+.navbar-brand{
+  font-weight: bold;
+}
+
 #footer {
   position: absolute;
   bottom: 0;
@@ -16,4 +20,47 @@
 
 #variant-table{
     overflow-x: scroll !important;
+    display: block;
+    white-space: nowrap;
+}
+
+table, tbody, tr, td {
+  margin: 0;
+  padding: 0;
+}
+
+table td{
+    min-width: 10px;
+    width: 20px;
+    max-width: 20px;
+    overflow: hidden;
+    transition: all 0.2s ease-out;
+}
+
+table td:hover{
+  box-shadow: #5b5b5b 0px 0px 5px 0px;
+  width: fit-content;
+  max-width: max-content;
+  height: fit-content;
+  border-radius: .25rem;
+  overflow: visible;
+}
+
+.button{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: fit-content;
+  width: fit-content;
+  background: #4E9CAF;
+  padding: 10px;
+  text-align: center;
+  border-radius: .25rem;
+  color: white;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.button:hover{
+  color:#4E9CAF;
 }

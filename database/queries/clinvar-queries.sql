@@ -1,6 +1,6 @@
 -- v.1.0
 
-select CHROM, POS, REF, ALT  from variant;
+select CHROM, POS, REF, ALT, QUAL, FILTER  from variant;
 
 SELECT * FROM INFO WHERE id IN 
    (SELECT id FROM variant 
@@ -9,6 +9,44 @@ SELECT * FROM INFO WHERE id IN
             POS='{POS}' AND
             CHROM='{CHROM}')
 
+select CHROM, POS, REF, ALT  from variant;
+
+SELECT * FROM INFO WHERE id IN 
+   (SELECT INFO_ID FROM variant 
+      WHERE ALT='A' AND
+            REF='G' AND
+            POS='925952' AND
+            CHROM='1');
+
+SELECT ABBRV FROM CLNDISDB_ABBRV WHERE ID IN
+  (SELECT CLNDISDB_NAME_ID FROM CLNDISDB 
+    WHERE INFO_ID IN 
+    (SELECT INFO_ID FROM variant 
+        WHERE ALT='A' AND
+              REF='G' AND
+              POS='925952' AND
+              CHROM='1') );
+
+SELECT CLNDISDB_NAME,CLNDISDB_ID FROM CLNDISDB WHERE INFO_ID IN 
+   (SELECT INFO_ID FROM variant 
+      WHERE ALT='A' AND
+            REF='G' AND
+            POS='925952' AND
+            CHROM='1');
+
+SELECT CLNSIG FROM CLNSIG WHERE INFO_ID IN 
+   (SELECT INFO_ID FROM variant 
+      WHERE ALT='A' AND
+            REF='G' AND
+            POS='925952' AND
+            CHROM='1');
+
+SELECT CLNSIG FROM CLNSIG WHERE INFO_ID IN 
+   (SELECT INFO_ID FROM variant 
+      WHERE ALT='A' AND
+            REF='G' AND
+            POS='925952' AND
+            CHROM='1');
 
 drop table INFO;
 drop table VARIANT;
