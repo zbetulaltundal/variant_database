@@ -14,5 +14,5 @@ CREATE TABLE pharmgkb (
 );
 
 CREATE TABLE DRUG (
-
+    
 );
