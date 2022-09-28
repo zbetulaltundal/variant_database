@@ -1,13 +1,13 @@
 {% extends "layout.html" %}
-{% block title %}Variant Info{% endblock %}
+{% block title %}Varyant Bilgisi{% endblock %}
 {% block content %}
 <div class="container mx-5 my-3">
     <div class="d-flex justify-content-between">
-        <p class="col-6 fs-2 fw-bold">Variant Information</p>
-        <a class="col-6 button" href="{{ url_for('home_page') }}">Upload another VCF file</a>
+        <p class="col-6 fs-2 fw-bold">Varyant Bilgisi</p>
+        <a class="col-6 button" href="{{ url_for('home_page') }}">Başka bir VCF dosyası yükleyin</a>
     </div>
 
-    <table id="variant-table" class="table table-hover table-bordered table-responsive">
+    <table id="variant-table" class="ms-0 py-0 display table table-hover table-bordered table-responsive">
         <thead class="thead-dark">
         <tr>
             {% for col in column_names %}

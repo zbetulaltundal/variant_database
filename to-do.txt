@@ -1,0 +1,9 @@
+veritabanlarını yapmaya devam etmek(pharmgkb, clinvar, dbsnp,
+uniportvar)
+updating the data
+fix page style issues, add filters
+clinvarı hızlandırmak
+kelimelerin açıklamalarını düzenlemek
+data cleaningi planlamak ve her biri için fonksiyon yazmak
+merging dbs
+sudenin attığı uı lara göz atmak

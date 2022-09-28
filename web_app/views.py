@@ -396,9 +396,6 @@ def excel_to_df(path):
 
 def dict_page():
     nomenc = excel_to_df(config.DICT_EXCEL_PATH)
-    print(nomenc.columns)
-    print(nomenc['WORD'])
-    print(nomenc['DEFINITION'])
     if nomenc is None: isNone = True
     else: isNone = False
     return render_template('dict.html', nomenc=nomenc, isNone=isNone)

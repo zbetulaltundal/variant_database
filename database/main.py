@@ -6,6 +6,7 @@ import pandas as pd
 import clingen_import as clingen
 import civic_import as civic
 import clinvar_import_v1 as clinvar
+import pharmgkb_import as pharmgkb
 import db_config
 import psycopg2 as psql
 import sys
@@ -78,6 +79,15 @@ def insert_into_db_returning_id(conn, query, record):
         print ("pgerror:", err.pgerror)
         print ("pgcode:", err.pgcode, "\n")
         conn.rollback()
+
+
+def err_handler(err):
+    print ("Exception has occured:", err)
+    print ("Exception type:", type(err))
+    err_type, err_obj, traceback = sys.exc_info()
+    line_num = traceback.tb_lineno
+    print ("\nERROR:", err, "on line number:", line_num)
+    print ("traceback:", traceback, "-- type:", err_type)
 
 def is_iterable(var):
     try:
@@ -175,7 +185,9 @@ if __name__ == "__main__":
     # if conn:
     #    conn.close()
 
-    
-    conn = db_connect(db_config.CLINVAR_DB_NAME)
+    conn = db_connect(db_config.PHARMGKB_DB_NAME)
+    pharmgkb.import_pharmgkb(conn)
+    if conn:
+        conn.close()
 
         

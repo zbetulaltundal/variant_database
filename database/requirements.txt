@@ -3,6 +3,6 @@ PyVCF
 numpy
 pandas
 psycopg2
-
+sqlalchemy
 
 ###### Requirements with Version Specifiers ######

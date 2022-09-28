@@ -5,3 +5,4 @@ DB_USER = "postgres"
 DB_PWD = "test"
 CIVIC_DB_NAME ='civic'
 CLINVAR_DB_NAME ='clinvar'
+PHARMGKB_DB_NAME ='pharmgkb'

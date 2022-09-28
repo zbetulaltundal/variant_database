@@ -18,7 +18,7 @@
   height: 2.5rem;            /* Footer height */
 }
 
-#variant-table{
+/* #variant-table{
     overflow-x: scroll !important;
     display: block;
     white-space: nowrap;
@@ -31,8 +31,6 @@ table, tbody, tr, td {
 
 table td{
     min-width: 10px;
-    width: 20px;
-    max-width: 20px;
     overflow: hidden;
     transition: all 0.2s ease-out;
 }
@@ -44,6 +42,32 @@ table td:hover{
   height: fit-content;
   border-radius: .25rem;
   overflow: visible;
+} */
+
+#variant-table_wrapper .dt-button-background{
+  background: none !important;
+  display: none !important;
+}
+
+a.paginate_button{
+  background: none !important;
+}
+
+#variant-table_wrapper .dt-button-collection{
+  max-height: 200px;
+  overflow-y: scroll;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+#variant-table_wrapper .dt-button{
+  box-shadow: none !important;
+  border: 1px solid #aaa;
+  background: white !important;
+}
+
+#variant-table_wrapper .dt-button-collection .dt-button, #variant-table_wrapper  .dt-button-collection .dt-button:hover{
+  border: none !important;
 }
 
 .button{
@@ -74,4 +98,13 @@ table td:hover{
 
 .card-header{
   background: none !important;
+}
+
+#variant-table, table.dataTable.no-footer {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.3) !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.3) !important;
+}
+
+button.buttons-colvis, #variant-table_filter{
+  margin-bottom: 40px;
 }

@@ -1,4 +1,0 @@
-Scripts\Activate.ps1
-pip install -r requirements.txt
-pip freeze
-set FLASK_DEBUG=1

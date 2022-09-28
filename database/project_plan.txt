@@ -1,0 +1,12 @@
+pharmgkb
+
+first convert each tsv file to df
+then merge dataframes on 'Clinical Annotation ID' column
+then insert the final dataframe to pharmgkb database:
+    drug annotation in data:
+         ';' means alternates
+         ',' formatting: <drug-name>,<drug-type>
+         '/' means combined use
+
+    phenotype annotation:
+        ';' means alternate names
