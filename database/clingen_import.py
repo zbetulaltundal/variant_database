@@ -1,4 +1,4 @@
-import main
+import common_functions
 import os
 import pandas as pd
 
@@ -18,22 +18,22 @@ def import_clingen_data(conn):
     # data değişkeninin her bir satırı iterate edilir
     for row in data.itertuples(): 
         if row[0] > 4:
-            gene_symbol = main.check_var(row[1])
-            hgnc_id = main.check_var(row[2])
-            disease_label = main.check_var(row[3])
-            mondo_disease_id = main.check_var(row[4])
-            moi = main.check_var(row[5])
-            sop = main.check_var(row[6])
-            classification = main.check_var(row[7])
-            online_report_url = main.check_var(row[8])
-            classification_date = main.check_var(row[9])
-            gcep = main.check_var((row[10]))
+            gene_symbol = common_functions.check_var(row[1])
+            hgnc_id = common_functions.check_var(row[2])
+            disease_label = common_functions.check_var(row[3])
+            mondo_disease_id = common_functions.check_var(row[4])
+            moi = common_functions.check_var(row[5])
+            sop = common_functions.check_var(row[6])
+            classification = common_functions.check_var(row[7])
+            online_report_url = common_functions.check_var(row[8])
+            classification_date = common_functions.check_var(row[9])
+            gcep = common_functions.check_var((row[10]))
             
             # data formatting
             # veri formatlama
             # convert iso 8601 date format to psql timestamptz format
             # iso 8601 formatındaki tarih bilgisi, postgresql'ın timestamptz formatına dönüştürülür
-            if main.check_var(classification_date) != None: 
+            if common_functions.check_var(classification_date) != None: 
                 # iso 8601 yy-mm-ddThh:mm:ss.mssZ
                 # timestamptz yy-mm-dd hh:mm:ss+00 
                 date, time = classification_date.split("T", 1)
@@ -41,12 +41,12 @@ def import_clingen_data(conn):
 
             # convert HGNC:XXXXX TO XXXXX
             # HGNC:XXXXX formatındaki veri XXXXX formatına dönüştürülür
-            if main.check_var(hgnc_id) != None: f_hgnc_id = hgnc_id[5:]
+            if common_functions.check_var(hgnc_id) != None: f_hgnc_id = hgnc_id[5:]
             else: f_hgnc_id = None
             
             # convert MONDO:XXXXXXX TO XXXXXXX
             # MONDO:XXXXX formatındaki veri XXXXX formatına dönüştürülür
-            if main.check_var(mondo_disease_id) != None: f_mondo_disease_id = mondo_disease_id[6:]
+            if common_functions.check_var(mondo_disease_id) != None: f_mondo_disease_id = mondo_disease_id[6:]
             else: f_mondo_disease_id = None
 
             # if no classification information given, set the field to 'None'
@@ -67,4 +67,4 @@ def import_clingen_data(conn):
                         moi, sop, classification, online_report_url, \
                         f_classification_date, gcep)
             
-            main.insert_into_db(conn, query, record)
+            common_functions.insert_into_db(conn, query, record)

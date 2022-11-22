@@ -4,7 +4,7 @@ CREATE TABLE clingen_variants (
     HGNC_ID  VARCHAR(5), -- HGNC gen id
     DISEASE_LABEL TEXT,
     MONDO_DISEASE_ID VARCHAR(7),
-    MOI VARCHAR(20),
+    MOI VARCHAR(20), -- mode of inheritance 
     SOP VARCHAR(4),
     CLASSIFICATION VARCHAR(20),
     ONLINE_REPORT TEXT,

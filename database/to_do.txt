@@ -1,4 +1,0 @@
-pharmgkb db implementation
-add pharmgkb and other dbs to website
-add pharmgkb to slides
-create a readme

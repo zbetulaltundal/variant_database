@@ -1,0 +1,48 @@
+GN (HGNC Gene Symbol)
+VT (CIViC Variant Name)
+CSQ (Consequence annotations from CIViC)
+Allele
+Consequence
+SYMBOL
+Entrez Gene ID
+Feature_type
+Feature
+HGVSc
+HGVSp
+CIViC Variant Name
+CIViC Variant ID
+CIViC Variant Aliases
+CIViC HGVS
+Allele Registry ID
+ClinVar IDs
+CIViC Variant Evidence Score
+CIViC Entity Type
+CIViC Entity ID
+CIViC Entity URL
+CIViC Entity Source
+CIViC Entity Variant Origin
+CIViC Entity Status
+CIViC Entity Clinical Significance
+CIViC Entity Direction
+CIViC Entity Disease
+CIViC Entity Drugs
+CIViC Entity Drug Interaction Type
+CIViC Evidence Phenotypes
+CIViC Evidence Level
+CIViC Evidence Rating
+CIViC Assertion ACMG Codes
+CIViC Assertion AMP Category
+CIViC Assertion NCCN Guideline
+CIVIC Assertion Regulatory Approval
+CIVIC Assertion FDA Companion Test
+CHROM
+POS
+ID
+REF
+ALT
+QUAL	
+FILTER	
+INFO
+
+yardımcı link:
+https://civic.readthedocs.io/en/latest/

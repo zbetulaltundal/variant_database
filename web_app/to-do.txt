@@ -8,3 +8,4 @@ koda dokümentasyon eklemek
 clinvarı hızlandırmak
 kalan 2 dbyi yapmak
 güncelleme kısmı
+makine öğrenmesi metodlarını uygulamak

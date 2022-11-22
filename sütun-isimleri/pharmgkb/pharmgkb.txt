@@ -1,0 +1,28 @@
+DRUGS
+PHENOTYPE NAME
+Clinical Annotation ID 
+Variant/Haplotypes
+GENE
+LEVEL OF EVIDENCE
+Level Override
+Level Modifiers
+Score_x
+Phenotype Category
+PMID Count
+Evidence Count
+Latest History Date (YYYY-MM-DD)
+URL
+Specialty Population
+Genotype/Allele
+Annotation Text
+Allele Function
+Evidence ID
+Evidence Type
+Evidence URL
+PMID
+Summary
+Score_y
+
+
+dokümentasyon linki !!! yardımcı olabilir !!!:
+https://www.pharmgkb.org/page/downloadClinicalAnnotationsHelp

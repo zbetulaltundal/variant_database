@@ -281,7 +281,7 @@ CREATE TABLE variants (
     Mol_Conseq TEXT,
     CLNSIGINCL TEXT,
     CLNSIGCONF TEXT,
-    CLNSIG TEXT, --Clinical significance for this single variant; multiple values are separated by a vertical bar
+    CLNSIG TEXT, -- Clinical significance for this single variant; multiple values are separated by a vertical bar
     CLNDISDB_NAME TEXT,
     CLNDISDB_ID TEXT,
     ABBRV TEXT

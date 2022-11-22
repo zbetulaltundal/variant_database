@@ -1,6 +1,6 @@
 import os
 import vcf
-import main 
+import common_functions 
 
 def get_csq_fields(vcf_reader):
     fields = []
@@ -16,7 +16,7 @@ def import_civic_data(conn):
     
     # open the csv data
     cwd = os.getcwd()  # Get the current working directory
-    vcf_path = f'{cwd}\\data\\CIVic'
+    vcf_path = f'{cwd}\\data'
     vcf_name = 'nightly-civic_accepted_and_submitted.vcf'
     vcf_reader = vcf.Reader(open(f'{vcf_path}\\{vcf_name}'))
 
@@ -25,21 +25,21 @@ def import_civic_data(conn):
 
     for rec in vcf_reader:
         dict = {}
-        dict['CHROM'] = main.check_var(rec.CHROM)
-        dict['POS'] = main.check_var(str(rec.POS))
-        dict['VAR_ID'] = main.check_var(rec.ID)
-        dict['REF'] = main.check_var(rec.REF)
-        dict['ALT'] = main.check_var(main.listToString(rec.ALT))
-        dict['QUAL'] = main.check_var(rec.QUAL)
-        dict['FILTER'] = main.check_var(rec.FILTER)
+        dict['CHROM'] = common_functions.check_var(rec.CHROM)
+        dict['POS'] = str(common_functions.check_var(rec.POS))
+        dict['VAR_ID'] = common_functions.check_var(rec.ID)
+        dict['REF'] = common_functions.check_var(rec.REF)
+        dict['ALT'] = common_functions.check_var(common_functions.listToString(rec.ALT))
+        dict['QUAL'] = common_functions.check_var(rec.QUAL)
+        dict['FILTER'] = common_functions.check_var(rec.FILTER)
 
         for key, val in rec.INFO.items():
             if key =="CSQ":
                 for csq_val, csq_key in zip(val[0].split("|"), csq_fields):
-                    t_csq_val = main.check_var(csq_val)
+                    t_csq_val = common_functions.check_var(csq_val)
                     dict["INFO."+csq_key] = t_csq_val
             else:
-                dict["INFO."+key] = main.check_var(val)
+                dict["INFO."+key] = common_functions.check_var(val)
 
        # insert record into the CIVic_variants table
         query = """INSERT INTO civic_variants ( CHROM ,  POS ,  VAR_ID ,  REF ,  ALT ,  QUAL ,  FILTER ,\
@@ -63,4 +63,4 @@ def import_civic_data(conn):
             continue
         
 
-        main.insert_into_db(conn, f'{query}{format_spec}', tupl)
+        common_functions.insert_into_db(conn, f'{query}{format_spec}', tupl)

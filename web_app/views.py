@@ -1,11 +1,10 @@
 import io
-import sys
-from os import error
-from werkzeug.utils import redirect, secure_filename
 import config
-from flask import render_template, request, flash, url_for
-from main import psql, err_handler, check_var, listToString, db_connect
+from flask import render_template, request, flash
+import psycopg2 as psql
+from main import listToString, db_connect
 import vcf 
+from common_funcs import *
 import numpy as np
 import pandas as pd
 
@@ -106,8 +105,14 @@ def vcf_to_df(file):
         / pandas dataframe formatındaki varyant verileri
     """
     try:
+        print(file)
+        print(type(file))
+        print(file.stream)
+        print(type(file.stream))
         data = file.stream.read()
         stream = io.StringIO(data.decode("UTF8"), newline=None)
+        if stream is None: 
+            return None
         vcf_reader = vcf.Reader(stream)
         variants_arr = []
         for rec in vcf_reader:
@@ -119,8 +124,6 @@ def vcf_to_df(file):
 
     except Exception as err:
         err_handler(err)
-        print("err variants_arr:")
-        print(variants_arr)
         return None
 
 def print_list(a):
@@ -313,7 +316,6 @@ def combine_data_frames(df1, df2):
 def get_variant_data(df):
 
     civic_data = np.empty([1, len(civic_cols)])
-    clinvar_data = np.empty([1, len(clinvar_cols)])
     try:
 
         for index, row in df.iterrows():
@@ -329,32 +331,53 @@ def get_variant_data(df):
                         CHROM='{CHROM}' """
 
                 civic_data = np.vstack([civic_data, fetch_from_civic(where)])
-                clinvar_data = np.vstack([clinvar_data, fetch_from_clinvar(where)])
 
-        print("civic_data")
-        print(civic_data)
-        print("clinvar_data")
-        print(clinvar_data)
         civic_df = data_to_df(civic_data, civic_cols)
-        clinvar_df = data_to_df(clinvar_data, clinvar_cols)
-
-        df_merged = combine_data_frames(civic_df, clinvar_df)
-        print(df_merged)
-        # common_cols = np.intersect1d(civic_df.columns, clinvar_df.columns).tolist()
-        # df_merged = pd.merge(civic_df, clinvar_df, on=common_cols, how='outer')
-        # data_frames = [civic_df, clinvar_df]
-        # df_merged = combine_data_frames(data_frames)
-    
-        # df_merged.head()
-
-        # return df_merged
-        print("here")
-
-        return df_merged
-
+        return civic_df
     except Exception as err:
         err_handler(err)
         return None
+
+    # civic_data = np.empty([1, len(civic_cols)])
+    # clinvar_data = np.empty([1, len(clinvar_cols)])
+    # try:
+
+    #     for index, row in df.iterrows():
+
+    #             CHROM = row['CHROM']
+    #             ALT = row['ALT']
+    #             REF = row['REF']
+    #             POS = row['POS']
+                
+    #             where = f""" WHERE ALT='{ALT}' AND\
+    #                     REF='{REF}' AND\
+    #                     POS='{POS}' AND\
+    #                     CHROM='{CHROM}' """
+
+    #             civic_data = np.vstack([civic_data, fetch_from_civic(where)])
+    #             clinvar_data = np.vstack([clinvar_data, fetch_from_clinvar(where)])
+
+    #     print("civic_data")
+    #     print(civic_data)
+    #     print("clinvar_data")
+    #     print(clinvar_data)
+    #     civic_df = data_to_df(civic_data, civic_cols)
+    #     clinvar_df = data_to_df(clinvar_data, clinvar_cols)
+
+    #     df_merged = combine_data_frames(civic_df, clinvar_df)
+    #     print(df_merged)
+    #     # common_cols = np.intersect1d(civic_df.columns, clinvar_df.columns).tolist()
+    #     # df_merged = pd.merge(civic_df, clinvar_df, on=common_cols, how='outer')
+    #     # data_frames = [civic_df, clinvar_df]
+    #     # df_merged = combine_data_frames(data_frames)
+    
+    #     # df_merged.head()
+
+    #     # return df_merged
+    #     print("here")
+
+    #    return df_merged
+
 
 def upload_vcf_file():
     try:
@@ -364,11 +387,14 @@ def upload_vcf_file():
                 flash('Please select a file')
             elif file and allowed_file(file.filename):
                 var_list = vcf_to_df(file)
-                fetched_data = get_variant_data(var_list)
-                print(fetched_data)
-                flash('File uploaded succesfully')
-                #return render_template('home.html')
-                return render_template('variant-info.html',  column_names=fetched_data.columns.values, row_data=list(fetched_data.values.tolist()), zip=zip)
+                if var_list is None:  
+                    flash('Uploaded file is empty.')
+                else:
+                    fetched_data = get_variant_data(var_list)
+                    print(fetched_data)
+                    flash('File uploaded succesfully')
+                    #return render_template('home.html')
+                    return render_template('variant-info.html',  column_names=fetched_data.columns.values, row_data=list(fetched_data.values.tolist()), zip=zip)
             else:
                 flash('Only vcf files are allowed')
         
