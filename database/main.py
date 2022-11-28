@@ -25,11 +25,6 @@ if __name__ == "__main__":
    #  if conn:
    #     conn.close()
 
-    # conn = db_connect(db_config.PHARMGKB_DB_NAME)
-    # pharmgkb.import_pharmgkb(conn)
-    # if conn:
-    #     conn.close()
-
     # conn = common_functions.db_connect(db_config.PHARMGKB_DB_NAME)
     # pharmgkb.import_pharmgkb(conn)
     # if conn:

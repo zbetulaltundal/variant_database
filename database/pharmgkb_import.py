@@ -22,7 +22,7 @@ def tsv_to_df(folder_path, filename):
 def join_data_frames(data_frames):
 
     try:
-        df_merged = reduce(lambda  left,right: pd.merge(left,right, on=join_cols, how='inner'), data_frames)
+        df_merged = reduce(lambda  left,right: pd.merge(left,right, on=join_cols, how='outer'), data_frames)
         return df_merged
 
     except Exception as err:

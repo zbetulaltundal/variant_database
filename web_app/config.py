@@ -15,5 +15,5 @@ CIVIC_DB_NAME = 'civic'
 DB_PWD = 'test'
 ALLOWED_EXTENSIONS = {'vcf'}
 
-DICT_EXCEL_PATH = '../dict-data.xlsx'
+DICT_EXCEL_PATH = 'sozluk.xlsx'
 

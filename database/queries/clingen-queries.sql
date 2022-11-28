@@ -1,3 +1,6 @@
+
+CREATE DATABASE clingen;
+
 CREATE TABLE clingen_variants (
     ID  SERIAL PRIMARY KEY, 
     GENE_SYMBOL  TEXT, -- hgnc gene symbol

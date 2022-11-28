@@ -1,13 +1,17 @@
-GENE SYMBOL	
-GENE ID (HGNC)	
-DISEASE LABEL	
-DISEASE ID (MONDO)	
-MOI	
-SOP	
-CLASSIFICATION	
-ONLINE REPORT	
-CLASSIFICATION DATE	
-GCEP
+GENE SYMBOL+	
+GENE ID (HGNC)+
+DISEASE LABEL +
+DISEASE ID (MONDO) u	
+MOI	u 
+SOP	u 
+CLASSIFICATION	u 
+-> bir hastalıkla ilişkilendirilmesi hakkındaki
+kesinlik 
+ONLINE REPORT u ignore  	
+CLASSIFICATION DATEu ignore
+GCEP u -> gcep tarafından ilişkilendirilen 
+hastalık yani gcep tarafından yapılan
+classification 
 
 
 yardımcı link: 

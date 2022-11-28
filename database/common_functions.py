@@ -78,27 +78,22 @@ def insert_into_db_returning_id(conn, query, record):
 
 # veritabanına verilen record'u verilen query ile insert eder.
 # insert edilen yeni satırın id'sini döner.
-def insert_into_db_returning_id_v2(conn, query):
+def insert_into_db_returning_id(conn, query):
     try:
         cur = conn.cursor()
-        #print(cur.mogrify(query))
         cur.execute(query)
         data = cur.fetchone()
         cur.close()
         conn.commit()
         return data[0] # id, primary key
     except Exception as err:
-        print ("Exception has occured:", err)
+        print ("Exception has occured:", err, "on line number:", line_num)
         print ("Exception type:", type(err))
         err_type, err_obj, traceback = sys.exc_info()
         line_num = traceback.tb_lineno
-        # print the connect() error
-        print ("\npsycopg2 ERROR:", err, "on line number:", line_num)
-        print ("psycopg2 traceback:", traceback, "-- type:", err_type)
-
+        print ("psycopg2 traceback:", traceback, " type:", err_type)
         # psycopg2 extensions.Diagnostics object attribute
         print ("\nextensions.Diagnostics:", err.diag)
-
         # print the pgcode and pgerror exceptions
         print ("pgerror:", err.pgerror)
         print ("pgcode:", err.pgcode, "\n")

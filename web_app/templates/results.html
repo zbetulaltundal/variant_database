@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+{% block title %}Varyant Bilgisi{% endblock %}
+{% block content %}
+<div class="container mx-5 my-3">
+    <div class="d-flex justify-content-between">
+        <p class="col-6 fs-2 fw-bold">Tarama Sonuçları</p>
+        <a class="col-6 button" href="{{ url_for('home_page') }}">Başka bir VCF dosyası yükleyin</a>
+    </div>
+    <div>
+        <h6>Tarama sonuçlarını görüntülemek istediğiniz varyantın üzerine tıklayın.</h6>
+        <div class="row d-flex justify-content-center">
+            <ul class="list-group">
+            {% for result in results %}
+                <!-- <a href="/tarama-sonuclari/chrom={{result['chrom']}}&pos={{result['pos']}}&alt={{result['alt']}}&ref={{result['ref']}}" class="col-2 countries-card-link text-decoration-none mt-4 px-0 mx-3"> -->
+                <li class="list-group-item">
+                    <a href="{{ url_for('variant_details', chrom=result['chrom'], pos=result['pos'], alt=result['alt'], ref=result['ref'])}}" class="col-2 text-decoration-none mt-4 px-0 mx-3">
+                        Varyant İçin Tarama Sonuçları <b>CHROM :</b> {{result["chrom"][0]}} <b>POS :</b> {{result["pos"][0]}} <b>REF :</b> {{result["ref"][0]}} <b>ALT :</b> {{result["alt"][0]}} </a>
+                </li>
+            {% endfor %}
+        </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

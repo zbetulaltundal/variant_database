@@ -1,0 +1,88 @@
+{% extends "layout.html" %}
+{% block title %}Varyant Bilgisi{% endblock %}
+{% block content %}
+<div class="container mx-5 my-3">
+    <div class="d-flex justify-content-between">
+        <p class="col-6 fs-2 fw-bold">Varyant Bilgisi</p>
+        <a class="col-6 button" href="{{ url_for('home_page') }}">Başka bir VCF dosyası yükleyin</a>
+    </div>
+
+    <div class="card my-3 w-50">
+        <div class="card-body">
+          <b>CHROM :</b> {{civic["chrom"][0]}} <b>POS :</b> {{civic["pos"][0]}} <b>REF :</b> {{civic["ref"][0]}} <b>ALT :</b> {{civic["alt"][0]}} 
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="row">
+            <div class="col-sm ps-0">
+                <h3>{{civic["HGNC GENE SYMBOL"][0]}}</h3>
+                <div>Allele of the variant: {{civic["allele"][0]}}</div>
+                <div>HGVSc: {{civic["hgvsc"][0]}}</div>
+                <div>HGVSp: {{civic["hgvsp"][0]}}</div>
+                <div>CIViC Evidence Phenotypes: {{civic["CIViC Evidence Phenotypes"][0]}}</div>
+                <div>CIViC Evidence Level: {{civic["CIViC Evidence Phenotypes"][0]}}</div>
+
+                {% if clingen_flag %}    
+                    {% for key,value in clingen.iterrows() %}
+                        <h6>HGNC Gene ID(s): {{value['HGNC GENE ID']}}</h6>
+                    {% endfor %}
+                {% endif %}
+
+                {% if pharmgkb_flag %}    
+                    {% for key,value in pharmgkb.iterrows() %}
+                        <h6>PMID(s): {{value['PMID']}}</h6>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div class="col-sm">
+                <h6 class="text-success">Diğer veritabanlarıyla bağlantılar</h6>
+                <ul class="list-group">
+                    <li class="list-group-item"><b>ClinVar ID:</b> {{civic["ClinVar ID"][0]}}</li>
+                <li class="list-group-item">
+                    <b>CIViC Variant ID:</b> {{civic["CIViC Variant ID"][0]}} <a href="{{ civic['CIViC Entity URL'][0] }}">Link</a>
+                </li>
+                {% if clingen_flag %}    
+                <li class="list-group-item">
+                <b>ClinGen ID(s):</b>
+                    {% for key,value in clingen.iterrows() %}
+                        <b>ID:</b> {{value['HGNC GENE ID']}} <a href="{{value['CLINGEN URL']}}">Link</a>
+                    {% endfor %}</li>
+                {% endif %}
+                
+                {% if pharmgkb_flag %}   
+                <li class="list-group-item">
+                <b>PharmGKB ID(s):</b>  
+                    {% for key,value in pharmgkb.iterrows() %}
+                        <b>Clinical Annotation ID:</b> {{value['clinical_annotation_id']}} <a href="{{value['evidence_url URL']}}">Link</a> 
+                    {% endfor %}</li>
+                {% endif %}
+            </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <h6>Varyant Hakkındaki Diğer Detaylar</h6>
+    <table id="variant-table" class="ms-0 py-0 display table table-hover table-bordered table-responsive">
+        <thead class="thead-dark">
+        <tr>
+            {% for col in column_names %}
+               <th class={{col}}>{{col}}</th>
+            {% endfor %}
+        </tr>
+        </thead>
+        <tbody>
+        {% for key, row in table_df.iterrows() %}
+        <tr class="variant-table-row">
+            {% for col, row_ in zip(column_names, row) %}
+                <td>{{row_}}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+    </table> 
+</div>
+
+{% endblock %}

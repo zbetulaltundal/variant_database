@@ -1,18 +1,21 @@
+from functools import reduce
 import io
 import config
 from flask import render_template, request, flash
 import psycopg2 as psql
-from main import listToString, db_connect
 import vcf 
 from common_funcs import *
 import numpy as np
 import pandas as pd
+import custom_error_handling
+
 
 # ********* global variables *********
 
 clingen_cols = ['GENE_SYMBOL', 'HGNC_ID', 'DISEASE_LABEL', 'MONDO_DISEASE_ID', 
     'MOI', 'SOP', 'CLASSIFICATION', 'ONLINE_REPORT', 'CLASSIFICATION_DATE', 'GCEP']
 
+# exclude CIViC_Var_Name,GN
 civic_cols = ['CHROM' ,  'POS' ,  'VAR_ID' ,  'REF' ,  'ALT' , 'QUAL', 'FILTER', 'GN', 'VT', 'Allele', 'Consequence', 'SYMBOL', 
         'Entrez_Gene_ID', 'Feature_type', 'Feature', 'HGVSc', 'HGVSp', 'CIViC_Var_Name', 'CIViC_Var_ID', 'CIViC_Var_Aliases', 
         'CIViC_HGVS', 'Allele_Registry_ID', 'ClinVar_ID', 'CIViC_Var_Ev_Score', 'CIViC_Ent_Type', 
@@ -22,26 +25,26 @@ civic_cols = ['CHROM' ,  'POS' ,  'VAR_ID' ,  'REF' ,  'ALT' , 'QUAL', 'FILTER',
         'CIViC_Assertion_AMP_Cat', 'CIViC_Assertion_NCCN_Guid', 'CIViC_Assertion_Regu_Appr_Guid', 
         'CIViC_Assertion_FDA_Comp_Test_Guid']
 
-clinvar_cols = ["CHROM", "POS", "REF", "ALT", "QUAL", "FILTER", "CLINVAR_ID", "AF_ESP", "AF_TGP", "AF_EXAC", "ALLELEID", "CLNHGVS", "CLNVC", 
-        "CLNVCSO", "DBVARID", "ORIGIN", "RS", "SSR", "ABBRV", "CLNDISDB_NAME", "CLNDISDB_ID", 
-        "CLNSIG", "CLNSIGCONF", "CLNSIGINCL", "Mol_Conseq", "Seq_Ont_ID",
-         "Gene_Sym", "Gene_ID", "STAT", "SRC", "SRC_ID", "DISEASE_NAME", "DISEASE_ID",
-         "INCL_DISEASE_NAME", "INCL_DISEASE_ID"]
+pharmgkb_cols = ["Clinical_Annotation_ID", "VARIANT", "GENE", "LEVEL_OF_EVIDENCE", "LEVEL_OVERRIDE",
+             "LEVEL_MODIFIERS", "SCORE", "PHENOTYPE_CATEGORY", "PMID_COUNT", "EVIDENCE_COUNT",
+             "LATEST_HISTORY_DATE", "pharmgkb_URL", "Specialty_Population", "Genotype",
+             "ANNOTATION_TEXT", "Allele_Function", "Evidence_ID", "Evidence_Type", "Evidence_URL", 
+             "Evidence_PMID", "Evidence_Summary", "Evidence_Score"]
+
+
+pharmgkb_col_name_mapper = {"GENE":"HGNC GENE SYMBOL", "LEVEL_OF_EVIDENCE": "EVIDENCE LEVEL"}
+civic_col_name_mapper = {'gn': 'HGNC GENE SYMBOL', 'vt': 'CIViC Variant Name', 'entrez_gene_id': 'Entrez Gene ID', 'feature_type': 'CIViC Feature Type', 'civic_var_name': 'CIViC Variant Name', 'civic_var_id': 'CIViC Variant ID', 'civic_var_aliases': 'CIViC Variant Aliases', 'civic_hgvs': 'CIViC HGVS', 'allele_registry_id': 'CIViC Allele Registry ID', 'clinvar_id': 'ClinVar ID', 'civic_var_ev_score': 'CIViC Variant Evidence Score', 'civic_ent_type': 'CIViC Entity Type', 'civic_ent_id': 'CIViC Entity ID', 'civic_ent_url': 'CIViC Entity URL', 'civic_ent_src': 'CIViC Entity Source', 'civic_ent_var_origin': 'CIViC Entity Variant Origin', 'civic_ent_stat': 'CIViC Entity Status', 'civic_clin_sig': 'CIViC Entity Clinical Significance', 'civic_ent_dir': 'CIViC Entity Direction supports', 'civic_ent_disease': 'CIViC Entity Disease', 'civic_ent_drugs': 'CIViC Entity Drugs', 'civic_ent_drug_int': 'CIViC Entity Drug Interaction Type', 'civic_ev_phenotypes': 'CIViC Evidence Phenotypes', 'civic_ev_level': 'CIViC Evidence Level', 'civic_ev_rating': 'CIViC Evidence Rating', 
+                        'civic_assertion_acmg_codes': 'CIViC Assertion ACMG Codes', 'civic_assertion_amp_cat': 'CIViC Assertion AMP Category', 'civic_assertion_nccn_guid': 'CIViC Assertion AMP Category', 'civic_assertion_regu_appr_guid': 'CIVIC Assertion Regulatory Approval', 'civic_assertion_fda_comp_test_guid': 'CIVIC Assertion FDA Companion Test'}
+clingen_col_name_mapper = {"gene_symbol":"HGNC GENE SYMBOL", "gene_id": "HGNC GENE ID", "disease_label": "DISEASE LABEL",
+                        "CLASSIFICATION":"CLINGEN CLASSIFICATION", "disease_id":"MONDO disease id",
+                        "online_report":"CLINGEN URL", "classification_date":"CLINGEN CLASSIFICATION DATE"}
+
 
 id_cols =  ['CHROM', 'POS', 'REF', 'ALT']
-
 
 # ***************************
 
 # ********* classes *********
-
-class clinvar_tbl:
-
-    # init method or constructor
-    def __init__(self, name, _cols, _query):
-        self.name = name
-        self.cols = _cols
-        self.query = _query
 
 # ***************************
 
@@ -105,10 +108,6 @@ def vcf_to_df(file):
         / pandas dataframe formatındaki varyant verileri
     """
     try:
-        print(file)
-        print(type(file))
-        print(file.stream)
-        print(type(file.stream))
         data = file.stream.read()
         stream = io.StringIO(data.decode("UTF8"), newline=None)
         if stream is None: 
@@ -216,32 +215,7 @@ def fetch_from_db(conn, cols, query, flag=False):
         conn.rollback()
         return None
 
-def combine_clinvar_tbl(clinvar_tbl_arr):
-
-    res_arr = np.full([1, 0], None)
-    conn = db_connect('clinvar')
-
-    try:
-        for tbl in clinvar_tbl_arr:
-            if tbl.name == 'VARIANT':
-                 data = fetch_from_db(conn, tbl.cols, tbl.query, True)
-            else: 
-                data = fetch_from_db(conn, tbl.cols, tbl.query)
-            if data is not None and data.size != 0:
-                res_arr = np.hstack((res_arr, data))
-            else:    
-                res_arr = np.hstack((res_arr, np.full([1, len(tbl.cols)], None)))
-                
-        return res_arr
-
-    except Exception as err:
-        err_handler(err)
-        print("err res_arr:")
-        print(res_arr)
-        print("err data:")
-        print(data)
-
-def fetch_from_civic(where):
+def select_all_from_civic(where):
 
     conn = db_connect('civic')
     civic_q = f"""SELECT CHROM ,  POS ,  VAR_ID ,  REF ,  ALT , QUAL, FILTER, GN, VT, Allele, Consequence, SYMBOL, 
@@ -254,47 +228,6 @@ def fetch_from_civic(where):
         CIViC_Assertion_FDA_Comp_Test_Guid FROM civic_variants {where}"""   
     return fetch_from_db(conn, civic_cols, civic_q, True)
 
-def fetch_from_clinvar(where):
-
-    info_id_selector = f"WHERE INFO_ID IN (SELECT INFO_ID FROM variant {where})"
-    
-    variant = clinvar_tbl("VARIANT", ["CHROM", "POS", "REF", "ALT", "QUAL", "FILTER", "CLINVAR_ID"], f"select CHROM, POS, REF, ALT, QUAL, FILTER, CLINVAR_ID from variant {where};")
-    info = clinvar_tbl("INFO", ["AF_ESP", "AF_TGP", "AF_EXAC", "ALLELEID", "CLNHGVS", "CLNVC", "CLNVCSO", 
-        "DBVARID", "ORIGIN", "RS", "SSR"],
-        f"SELECT AF_ESP, AF_TGP, AF_EXAC, ALLELEID, CLNHGVS, CLNVC, CLNVCSO, \
-        DBVARID, ORIGIN, RS, SSR FROM INFO WHERE id IN (SELECT INFO_ID FROM variant {where});")
-    CLNDISDB_ABBRV = clinvar_tbl("CLNDISDB_ABBRV", ["ABBRV"], f"SELECT ABBRV FROM CLNDISDB_ABBRV WHERE ID IN \
-            (SELECT CLNDISDB_NAME_ID FROM CLNDISDB \
-                {info_id_selector});")
-    CLNDISDB = clinvar_tbl("CLNDISDB", ["CLNDISDB_NAME", "CLNDISDB_ID"], 
-     f"SELECT CLNDISDB_NAME, CLNDISDB_ID FROM CLNDISDB \
-            {info_id_selector};")
-    CLNSIG = clinvar_tbl("CLNSIG", ["CLNSIG"], f"SELECT CLNSIG FROM CLNSIG \
-            {info_id_selector};")
-    CLNSIGCONF = clinvar_tbl("CLNSIGCONF", ["CLNSIGCONF"], f"SELECT CLNSIGCONF FROM CLNSIGCONF \
-            {info_id_selector};")
-    CLNSIGINCL = clinvar_tbl("CLNSIGINCL", ["CLNSIGINCL"], f"SELECT CLNSIGINCL FROM CLNSIGINCL \
-            {info_id_selector};")
-    MC = clinvar_tbl("MC", ["Mol_Conseq", "Seq_Ont_ID"], f"SELECT Mol_Conseq, Seq_Ont_ID FROM MC \
-            {info_id_selector};")
-    GENEINFO = clinvar_tbl("GENEINFO", ["Gene_Sym", "Gene_ID"], f"SELECT Gene_Sym, Gene_ID FROM GENEINFO \
-            {info_id_selector};")
-    CLNREVSTAT = clinvar_tbl("CLNREVSTAT", ["STAT"], f"SELECT STAT FROM CLNREVSTAT \
-            {info_id_selector};")
-    CLNVI = clinvar_tbl("CLNVI", ["SRC", "SRC_ID"], f"SELECT SRC, SRC_ID FROM CLNVI \
-            {info_id_selector};")
-    CLNDN = clinvar_tbl("CLNDN", ["DISEASE_NAME", "DISEASE_ID"], f"SELECT DISEASE_NAME, DISEASE_ID FROM CLNDN \
-            {info_id_selector};")
-    CLNDNINCL = clinvar_tbl("CLNDNINCL",["INCL_DISEASE_NAME", "INCL_DISEASE_ID"],  f"SELECT DISEASE_NAME, DISEASE_ID FROM CLNDNINCL \
-            {info_id_selector};")
-
-    clinvar_tbl_arr = [variant, info, CLNDISDB_ABBRV, CLNDISDB, CLNSIG, CLNSIGCONF, 
-      CLNSIGINCL, MC, GENEINFO, CLNREVSTAT, CLNVI, CLNDN, CLNDNINCL]
-    
-    res_arr = combine_clinvar_tbl(clinvar_tbl_arr)
-
-    return res_arr
-
 def data_to_df(data, cols):
 
     data = np.delete(data, 0, 0)
@@ -303,22 +236,39 @@ def data_to_df(data, cols):
 
     return np_arr_to_df(data, cols)
 
-def combine_data_frames(df1, df2):
-    
-    if df1 is None and df2 is None:
-        return None
-    elif df1 is None: return df2
-    elif df2 is None: return df1
-    
-    cols = np.intersect1d(df1.columns, df2.columns).tolist()
-    return pd.merge(df1, df2, on=cols, how='outer') 
 
-def get_variant_data(df):
 
+def join_data_frames(data_frames, join_cols):
+    try:
+        first_iter = True
+        df1 = data_frames[0]
+        for df2 in data_frames:
+            if first_iter == False:
+                if (df1 is None and df2 is not None) or (df1.empty and df1.empty == False): 
+                    df1 = df2
+                elif (df2 is None and df1 is not None) or (df2.empty and df1.empty == False): continue
+                elif df1 is None and df2 is None: continue
+                elif df1.empty and df2.empty: continue
+                elif (df1 is not None) and (df2 is not None) and (df1.empty == False) and (df2.empty == False):
+                    print(df1.columns)   
+                    df1 = pd.merge(df1, df2, on=join_cols, how='outer') 
+
+                print(df1)
+                if df1 is not None: print(df1.empty)
+
+            first_iter = False
+        
+        print(df1)
+        print("df merged")
+        return df1
+
+    except Exception as err:
+        custom_error_handling.err_handler(err)
+
+def get_civic_data(input_vcf_df):
     civic_data = np.empty([1, len(civic_cols)])
     try:
-
-        for index, row in df.iterrows():
+        for index, row in input_vcf_df.iterrows():
 
                 CHROM = row['CHROM']
                 ALT = row['ALT']
@@ -330,54 +280,176 @@ def get_variant_data(df):
                         POS='{POS}' AND\
                         CHROM='{CHROM}' """
 
-                civic_data = np.vstack([civic_data, fetch_from_civic(where)])
+                civic_data = np.vstack([civic_data, select_all_from_civic(where)])
 
         civic_df = data_to_df(civic_data, civic_cols)
+        civic_df.drop(columns=['VAR_ID', 'SYMBOL', 'FILTER'], inplace=True)
+        civic_df.rename(columns = civic_col_name_mapper, inplace = True)
         return civic_df
     except Exception as err:
         err_handler(err)
         return None
+ 
 
-    # civic_data = np.empty([1, len(civic_cols)])
-    # clinvar_data = np.empty([1, len(clinvar_cols)])
-    # try:
 
-    #     for index, row in df.iterrows():
+# def get_pharmgkb_data(hgnc_gene_symbol):
 
-    #             CHROM = row['CHROM']
-    #             ALT = row['ALT']
-    #             REF = row['REF']
-    #             POS = row['POS']
-                
-    #             where = f""" WHERE ALT='{ALT}' AND\
-    #                     REF='{REF}' AND\
-    #                     POS='{POS}' AND\
-    #                     CHROM='{CHROM}' """
 
-    #             civic_data = np.vstack([civic_data, fetch_from_civic(where)])
-    #             clinvar_data = np.vstack([clinvar_data, fetch_from_clinvar(where)])
+# def 
 
-    #     print("civic_data")
-    #     print(civic_data)
-    #     print("clinvar_data")
-    #     print(clinvar_data)
-    #     civic_df = data_to_df(civic_data, civic_cols)
-    #     clinvar_df = data_to_df(clinvar_data, clinvar_cols)
-
-    #     df_merged = combine_data_frames(civic_df, clinvar_df)
-    #     print(df_merged)
-    #     # common_cols = np.intersect1d(civic_df.columns, clinvar_df.columns).tolist()
-    #     # df_merged = pd.merge(civic_df, clinvar_df, on=common_cols, how='outer')
-    #     # data_frames = [civic_df, clinvar_df]
-    #     # df_merged = combine_data_frames(data_frames)
+# def collect_data(input_vcf_df):
+#     civic_df = get_civic_data(input_vcf_df)
+#     civic_data = get_civic_data(input_vcf_df)
+#     clingen_data = get_clingen_data(hgnc_gene_symbol)
+#     pharmgkb_data = get_pharmgkb_data(hgnc_gene_symbol)
     
-    #     # df_merged.head()
+#     print(fetched_data)
+#     flash('File uploaded succesfully')
+#     #return render_template('home.html')
+#     return render_template('results.html', 
+#     hgnc_id=
+#     civic_df=civic_df
+#     column_names=fetched_data.columns.values, 
+#     row_data=list(fetched_data.values.tolist()), 
+#     zip=zip)
 
-    #     # return df_merged
-    #     print("here")
+def fetch_from_civic_df(chrom, alt, ref, pos):
+    try:
+        where = f""" WHERE ALT='{alt}' AND\
+                REF='{ref}' AND\
+                POS='{pos}' AND\
+                CHROM='{chrom}' """
 
-    #    return df_merged
+        conn = db_connect('civic')
+        civic_q = f"""SELECT CHROM ,  POS ,  VAR_ID ,  REF ,  ALT , QUAL, FILTER, GN, VT, Allele, Consequence, SYMBOL, 
+            Entrez_Gene_ID, Feature_type, Feature, HGVSc, HGVSp, CIViC_Var_Name, CIViC_Var_ID, CIViC_Var_Aliases, 
+            CIViC_HGVS, Allele_Registry_ID, ClinVar_ID, CIViC_Var_Ev_Score, CIViC_Ent_Type, 
+            CIViC_Ent_ID, CIViC_Ent_URL, CIViC_Ent_Src, CIViC_Ent_Var_Origin, CIViC_Ent_Stat,
+            CIViC_Clin_Sig, CIViC_Ent_Dir, CIViC_Ent_Disease, CIViC_Ent_Drugs, CIViC_Ent_Drug_Int, 
+            CIViC_Ev_Phenotypes, CIViC_Ev_Level, CIViC_Ev_Rating, CIViC_Assertion_ACMG_Codes,
+            CIViC_Assertion_AMP_Cat, CIViC_Assertion_NCCN_Guid, CIViC_Assertion_Regu_Appr_Guid, 
+            CIViC_Assertion_FDA_Comp_Test_Guid FROM civic_variants {where}"""   
+        civic_df = pd.read_sql_query(civic_q, con=conn)
+        civic_df.drop(columns=['var_id', 'symbol', 'filter'], inplace=True)
+        civic_df.rename(columns = civic_col_name_mapper, inplace = True)
+        return civic_df
+    except Exception as err:
+        err_handler(err)
+        return render_template('home.html')
 
+def fetch_from_psql_db_df(conn, query, col_mapper, drop_cols=None):
+
+    try:
+        df = pd.read_sql_query(query, con=conn)
+        if drop_cols is not None:
+            df.drop(columns=drop_cols, inplace=True)
+        df.rename(columns = col_mapper, inplace = True)
+        return df
+    
+    except Exception as err:
+        err_handler(err)
+        return render_template('home.html')
+
+
+def fetch_from_clingen(hgnc_gene_symbol):
+    
+    conn = db_connect('clingen') 
+    where = f""" WHERE GENE_SYMBOL='{hgnc_gene_symbol}' """
+    return fetch_from_psql_db_df(conn, f"""SELECT * FROM clingen_variants {where}""", clingen_col_name_mapper)
+        
+def fetch_from_pharmgkb(hgnc_gene_symbol):
+    try:
+        conn = db_connect('pharmgkb') 
+        where = f""" WHERE GENE='{hgnc_gene_symbol}' """
+        pharmgkb_df = fetch_from_psql_db_df(conn,f"""SELECT * FROM pharmgkb {where}""", pharmgkb_col_name_mapper)
+        # drugs_df = fetch_from_psql_db_df(conn,f"""SELECT * FROM drug {where}""", pharmgkb_col_name_mapper)
+        # phenotype_df = fetch_from_psql_db_df(conn,f"""SELECT * FROM phenotype {where}""", pharmgkb_col_name_mapper)
+
+        #merged = join_data_frames(data_frames, "", join_type)
+        return pharmgkb_df
+    except Exception as err:
+        err_handler(err)
+        return render_template('home.html')
+
+def check_df_empty_or_none(df):
+    if df is None: return False
+    if df.empty: return False
+
+    return True
+
+def variant_details(chrom, pos, alt, ref):
+    try:
+        civic_df = fetch_from_civic_df(chrom, alt, ref, pos)
+        civic_df_flag = check_df_empty_or_none(civic_df)
+
+        print(civic_df.columns)
+
+        hgnc_gene_symbol = civic_df.loc[0]['HGNC GENE SYMBOL']
+        clingen_df = fetch_from_clingen(hgnc_gene_symbol)
+        clingen_flag = check_df_empty_or_none(clingen_df)
+        pharmgkb_df = fetch_from_pharmgkb(hgnc_gene_symbol)
+        pharmgkb_flag = check_df_empty_or_none(pharmgkb_df)
+        print(clingen_df.columns)
+        print(pharmgkb_df.columns)
+
+        df_list = [civic_df, clingen_df, pharmgkb_df]
+        table_df = join_data_frames(df_list, ['HGNC GENE SYMBOL'])
+        return render_template('variant-details.html',
+            civic=civic_df, 
+            clingen=clingen_df, 
+            clingen_flag=clingen_flag,
+            civic_df_flag=civic_df_flag,
+            pharmgkb_flag=pharmgkb_flag,
+            pharmgkb=pharmgkb_df, 
+            column_names=table_df.columns,
+            table_df=table_df, zip=zip)
+
+    except Exception as err:
+        err_handler(err)
+        return render_template('home.html')
+
+    
+
+def list_results(input_vcf_df):
+    try:
+        out_arr = []
+        conn = db_connect('civic')
+        for index, row in input_vcf_df.iterrows():
+
+            CHROM = row['CHROM']
+            ALT = row['ALT']
+            REF = row['REF']
+            POS = row['POS']
+            
+            where = f""" WHERE ALT='{ALT}' AND\
+                    REF='{REF}' AND\
+                    POS='{POS}' AND\
+                    CHROM='{CHROM}' """
+                
+            query = f"SELECT GN FROM civic_variants {where};"
+            cur = conn.cursor() 
+            cur.execute(query)
+            hgnc_symbol = cur.fetchone()
+            cur.close()
+            conn.commit()
+            
+            elem = dict(
+                hgnc_symbol=hgnc_symbol,
+                chrom=CHROM,
+                alt=ALT,
+                ref=REF,
+                pos=POS,
+            )
+
+            print(elem)
+
+            out_arr.append(elem)
+
+        return render_template('results.html', results=out_arr)
+    
+    except Exception as err:
+        err_handler(err)
+        return render_template('home.html')
 
 def upload_vcf_file():
     try:
@@ -386,15 +458,11 @@ def upload_vcf_file():
             if file.filename == '':
                 flash('Please select a file')
             elif file and allowed_file(file.filename):
-                var_list = vcf_to_df(file)
-                if var_list is None:  
+                input_vcf_df = vcf_to_df(file)
+                if input_vcf_df is None:  
                     flash('Uploaded file is empty.')
                 else:
-                    fetched_data = get_variant_data(var_list)
-                    print(fetched_data)
-                    flash('File uploaded succesfully')
-                    #return render_template('home.html')
-                    return render_template('variant-info.html',  column_names=fetched_data.columns.values, row_data=list(fetched_data.values.tolist()), zip=zip)
+                    return list_results(input_vcf_df)
             else:
                 flash('Only vcf files are allowed')
         
@@ -409,8 +477,9 @@ def upload_vcf_file():
 def home_page():
     return render_template("home.html")
 
-def variant_info():
-    return render_template('variant-info.html')
+
+def add_data():
+    return render_template("veri-ekle.html")
 
 def excel_to_df(path):
     try:

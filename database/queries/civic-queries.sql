@@ -49,4 +49,5 @@ select * from civic_variants where alt='GGCAGCTGGTGCT';
 select (CHROM,	POS,	VAR_ID,	REF,	ALT,	QUAL,	FILTER) from civic_variants where alt='GGCAGCTGGTGCT';
 select (CHROM,	POS,	VAR_ID,	REF,	ALT,	QUAL,	FILTER) from civic_variants where chrom='1';
 select (CHROM,	POS,	VAR_ID,	REF,	GN,	QUAL,	VT, Allele, Consequence) from civic_variants;
+select GN from civic_variants where CHROM='1'	and POS='11187094'	and REF='G' and ALT='T';
 
