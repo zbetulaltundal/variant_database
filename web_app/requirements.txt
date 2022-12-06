@@ -5,7 +5,8 @@ pandas
 psycopg2
 datetime
 Werkzeug
-openpyxl
+scikit-allel
+sqlalchemy
 ###### Requirements with Version Specifiers ######
 
 

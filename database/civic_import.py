@@ -1,66 +1,124 @@
 import os
-import vcf
 import common_functions 
+import re
+import sys
+import io
+import pandas as pd
 
-def get_csq_fields(vcf_reader):
+
+civic_cols=['Allele', 'Consequence', 'SYMBOL', 'Entrez Gene ID',
+ 'Feature_type', 'Feature', 'HGVSc', 'HGVSp', 'CIViC Variant Name', 
+ 'CIViC Variant ID', 'CIViC Variant Aliases', 'CIViC HGVS', 
+ 'Allele Registry ID', 'ClinVar IDs', 'CIViC Variant Evidence Score', 'CIViC Entity Type', 'CIViC Entity ID', 
+ 'CIViC Entity URL', 'CIViC Entity Source', 'CIViC Entity Variant Origin', 'CIViC Entity Status', 'CIViC Entity Clinical Significance', 'CIViC Entity Direction', 'CIViC Entity Disease', 'CIViC Entity Drugs', 'CIViC Entity Drug Interaction Type', 'CIViC Evidence Phenotypes', 'CIViC Evidence Level', 'CIViC Evidence Rating', 'CIViC Assertion ACMG Codes', 'CIViC Assertion AMP Category', 'CIViC Assertion NCCN Guideline', 'CIVIC Assertion Regulatory Approval', 'CIVIC Assertion FDA Companion Test']
+
+def replace_cols(l):
+    l_new = []
+    for item in l:
+        l_new.append(item.replace(" ", "_"))
+    return l_new
+
+csq_pattern = re.compile("##INFO\s*=<\s*ID\s*=\s*CSQ*", flags=re.IGNORECASE)
+def get_csq_fields(path):
+    
     fields = []
-    csq = vcf_reader.infos['CSQ']
-    start_idx = csq.desc.find("Format: ") + 8
-
-    for f in csq.desc[start_idx: ].split("|"):
-        fields.append(f)
+    with open(path, 'r') as f:
+        for line in f:
+            if csq_pattern.match(line) is not None:
+                start_idx = line.find("Format: ") + 8
+                fields = line[start_idx: ].split("|")
+                return fields
 
     return fields
+
+def insert_info_to_db(info_str, conn):
+    
+    try:
+        info_list = info_str.split(";")
+
+        info_dict = dict(
+            GN="",
+            VT=""
+            )
+        
+
+        for info_pair in info_list:
+            item_data = info_pair.split("=")
+            key = item_data[0]
+            val = item_data[1]
+
+            if key=="CSQ":
+                for csq_val, csq_key in zip(val.split("|"), civic_cols):
+                    t_csq_val = common_functions.check_var(csq_val)
+                    csq_key_f = csq_key.replace(" ", "_")
+                    info_dict[csq_key_f] = t_csq_val
+
+            if key in info_dict:
+                info_dict[key] = val
+
+        info_id = None
+        
+        civic_cols.append("GN")
+        civic_cols.append("VT")
+        
+        info_values = info_dict.values()
+
+        # 89th line gives an exception
+        # if len(info_values) == 33: 
+        #     print(info_values)
+        query = f"""INSERT INTO  INFO (GN, VT, Allele,Consequence,SYMBOL,Entrez_Gene_ID, \
+        Feature_type,Feature,HGVSc,HGVSp,CIViC_Variant_Name,CIViC_Variant_ID,CIViC_Variant_Aliases,\
+        CIViC_HGVS,Allele_Registry_ID,ClinVar_IDs,CIViC_Variant_Evidence_Score,\
+        CIViC_Entity_Type,CIViC_Entity_ID,CIViC_Entity_URL,CIViC_Entity_Source,\
+        CIViC_Entity_Variant_Origin,CIViC_Entity_Status,CIViC_Entity_Clinical_Significance,\
+        CIViC_Entity_Direction,CIViC_Entity_Disease,CIViC_Entity_Drugs,CIViC_Entity_Drug_Interaction_Type,\
+        CIViC_Evidence_Phenotypes,CIViC_Evidence_Level,CIViC_Evidence_Rating,CIViC_Assertion_ACMG_Codes,CIViC_Assertion_AMP_Category,CIViC_Assertion_NCCN_Guideline,CIVIC_Assertion_Regulatory_Approval,CIVIC_Assertion_FDA_Companion_Test)
+        VALUES"""
+        format_spec =f' ({(len(info_values) -1)*("%s,")} %s) RETURNING ID;'
+        record=tuple(info_values)
+        info_id = common_functions.insert_into_db_returning_id_V1(conn, f"{query}{format_spec}", record)
+
+        return info_id
+
+    except Exception as err:
+        print("in function insert_info_to_db")
+        print ("Exception has occured:", err)
+        print ("Exception type:", type(err))
+        err_type, err_obj, traceback = sys.exc_info()
+        line_num = traceback.tb_lineno
+        # print the connect() error
+        print ("\nERROR:", err, "on line number:", line_num)
+        print ("traceback:", traceback, "-- type:", err_type)
+
+def print_list(l):
+    for item in l:
+        print(f"{item}", end =",")
+
+def read_vcf(path):
+    with open(path, 'r') as f:
+        lines = [l for l in f if not l.startswith('##')]
+    return pd.read_csv(
+        io.StringIO(''.join(lines)),
+        dtype={'#CHROM': str, 'POS': int, 'ID': str, 'REF': str, 'ALT': str,
+               'QUAL': str, 'FILTER': str, 'INFO': str},
+        sep='\t'
+    ).rename(columns={'#CHROM': 'CHROM'})
+
 
 def import_civic_data(conn):
     
     # open the csv data
     cwd = os.getcwd()  # Get the current working directory
-    vcf_path = f'{cwd}\\data'
-    vcf_name = 'nightly-civic_accepted_and_submitted.vcf'
-    vcf_reader = vcf.Reader(open(f'{vcf_path}\\{vcf_name}'))
+    vcf_path = f'{cwd}\\data\\nightly-civic_accepted_and_submitted.vcf'
+    df = common_functions.read_vcf(vcf_path)
+    df['INFO_ID'] = df['INFO'].progress_apply(insert_info_to_db, conn=conn)
 
-    csq_fields = get_csq_fields(vcf_reader)
-    print(csq_fields)
+    df.drop(columns="INFO", inplace=True)
+    df.to_csv("temp\\civic_variants.csv", index=False)
 
-    for rec in vcf_reader:
-        dict = {}
-        dict['CHROM'] = common_functions.check_var(rec.CHROM)
-        dict['POS'] = str(common_functions.check_var(rec.POS))
-        dict['VAR_ID'] = common_functions.check_var(rec.ID)
-        dict['REF'] = common_functions.check_var(rec.REF)
-        dict['ALT'] = common_functions.check_var(common_functions.listToString(rec.ALT))
-        dict['QUAL'] = common_functions.check_var(rec.QUAL)
-        dict['FILTER'] = common_functions.check_var(rec.FILTER)
+    cwd = os.getcwd()
+    fpath = f'{cwd}\\temp\\civic_variants.csv'
+    common_functions.insert_csv(conn, fpath, "VARIANT", "(CHROM,POS,ID,REF,ALT,QUAL,FILTER,INFO_ID)")
 
-        for key, val in rec.INFO.items():
-            if key =="CSQ":
-                for csq_val, csq_key in zip(val[0].split("|"), csq_fields):
-                    t_csq_val = common_functions.check_var(csq_val)
-                    dict["INFO."+csq_key] = t_csq_val
-            else:
-                dict["INFO."+key] = common_functions.check_var(val)
 
-       # insert record into the CIVic_variants table
-        query = """INSERT INTO civic_variants ( CHROM ,  POS ,  VAR_ID ,  REF ,  ALT ,  QUAL ,  FILTER ,\
-                     GN ,  VT ,  Allele ,  Consequence ,  SYMBOL ,  Entrez_Gene_ID ,  Feature_type ,  Feature ,  HGVSc , \
-                     HGVSp ,  CIViC_Var_Name ,  CIViC_Var_ID ,  CIViC_Var_Aliases ,  CIViC_HGVS , \
-                     Allele_Registry_ID ,  ClinVar_ID ,  CIViC_Var_Ev_Score ,  CIViC_Ent_Type , \
-                     CIViC_Ent_ID ,  CIViC_Ent_URL ,  CIViC_Ent_Src ,  CIViC_Ent_Var_Origin ,\
-                     CIViC_Ent_Stat ,  CIViC_Clin_Sig ,  CIViC_Ent_Dir , \
-                     CIViC_Ent_Disease ,  CIViC_Ent_Drugs ,  CIViC_Ent_Drug_Int , \
-                     CIViC_Ev_Phenotypes ,  CIViC_Ev_Level ,  CIViC_Ev_Rating , \
-                     CIViC_Assertion_ACMG_Codes ,  CIViC_Assertion_AMP_Cat ,\
-                     CIViC_Assertion_NCCN_Guid ,  CIViC_Assertion_Regu_Appr_Guid ,\
-                     CIViC_Assertion_FDA_Comp_Test_Guid) """
-
-        format_spec =f'VALUES ({42*"%s,"}%s);'
-        tupl = tuple(dict.values())
-
-        # 89th line gives an exception
-        if len(tupl) == 33: 
-            print(tupl)
-            continue
-        
-
-        common_functions.insert_into_db(conn, f'{query}{format_spec}', tupl)
+    # print_list(tuple(replace_cols(civic_cols)))

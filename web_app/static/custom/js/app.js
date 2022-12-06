@@ -27,5 +27,4 @@ $(document).ready(function() {
         ]
     });
     table.columns().visible( false );
-
 } );

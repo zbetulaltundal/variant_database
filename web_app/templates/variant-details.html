@@ -64,25 +64,7 @@
         </div>
     </div>
 
-    <h6>Varyant Hakkındaki Diğer Detaylar</h6>
-    <table id="variant-table" class="ms-0 py-0 display table table-hover table-bordered table-responsive">
-        <thead class="thead-dark">
-        <tr>
-            {% for col in column_names %}
-               <th class={{col}}>{{col}}</th>
-            {% endfor %}
-        </tr>
-        </thead>
-        <tbody>
-        {% for key, row in table_df.iterrows() %}
-        <tr class="variant-table-row">
-            {% for col, row_ in zip(column_names, row) %}
-                <td>{{row_}}</td>
-            {% endfor %}
-        </tr>
-        {% endfor %}
-    </tbody>
-    </table> 
+
 </div>
 
 {% endblock %}

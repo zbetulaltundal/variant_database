@@ -1,14 +1,15 @@
-from functools import reduce
 import io
 import config
-from flask import render_template, request, flash
+from flask import Blueprint, render_template, request, flash
 import psycopg2 as psql
-import vcf 
 from common_funcs import *
 import numpy as np
 import pandas as pd
 import custom_error_handling
-
+from main import app
+import os
+import allel
+import time
 
 # ********* global variables *********
 
@@ -47,6 +48,8 @@ id_cols =  ['CHROM', 'POS', 'REF', 'ALT']
 # ********* classes *********
 
 # ***************************
+
+bp1 = Blueprint('main_bp', __name__, url_prefix='/')
 
 def allowed_file(filename):
     """ Checks if given file has one of the allowed extensions in app
@@ -92,35 +95,26 @@ def record_cmpr(rec1, rec2):
     
     return False
 
-def vcf_to_df(file):
+
+def read_vcf_from_str(file_content):
     """ Store data in the vcf file on a pandas dataframe 
     / Vcf dosyasındaki verileri bir pandas dataframe'e depolar
-
     Parameters / Parametreler
     ----------
-    file : str
-        The vcf file (vcf dosyası)
+    file_content : str
+        The content of vcf file (vcf dosyasının içeriği)
 
-    Returns / Dönüş değeri
-    -------
-    variants_df
-        variant datas in the pandas dataframe format
-        / pandas dataframe formatındaki varyant verileri
+    Returns vcf file in the pandas dataframe format
+        / pandas dataframe formatındaki vcf dosyası
     """
     try:
-        data = file.stream.read()
-        stream = io.StringIO(data.decode("UTF8"), newline=None)
-        if stream is None: 
-            return None
-        vcf_reader = vcf.Reader(stream)
-        variants_arr = []
-        for rec in vcf_reader:
-            new_row = [check_var(rec.CHROM), check_var(rec.POS), check_var(rec.REF), check_var(listToString(rec.ALT))]
-            variants_arr.append(new_row)
-        
-        variants_df = pd.DataFrame(variants_arr, columns=id_cols)
-        return variants_df
-
+        lines = [l for l in io.StringIO(file_content) if not l.startswith('##')]
+        return pd.read_csv(
+            io.StringIO(''.join(lines)),
+            dtype={'#CHROM': str, 'POS': int, 'ID': str, 'REF': str, 'ALT': str,
+                'QUAL': str, 'FILTER': str, 'INFO': str},
+            sep='\t'
+        ).rename(columns={'#CHROM': 'CHROM'})
     except Exception as err:
         err_handler(err)
         return None
@@ -379,6 +373,8 @@ def check_df_empty_or_none(df):
 
 def variant_details(chrom, pos, alt, ref):
     try:
+        # tüm özellikleri listele, bir kısmını topluca yukarda, 
+        # bazılarını dblere göre kategorize edip aşağıda
         civic_df = fetch_from_civic_df(chrom, alt, ref, pos)
         civic_df_flag = check_df_empty_or_none(civic_df)
 
@@ -409,41 +405,55 @@ def variant_details(chrom, pos, alt, ref):
         return render_template('home.html')
 
     
+# def filter_civic(df):
+#     civic_df = fetch_from_civic_df(chrom, alt, ref, pos)
+#     civic_df_flag = check_df_empty_or_none(civic_df)
 
-def list_results(input_vcf_df):
+
+def list_results(df):
     try:
         out_arr = []
+
+        # for each record in given vcf file send queries to each db and ger results in df format
+        # civic_df = filter_civic(df)
+        # clinvar_df = filter_clinvar(df)
+
+        # merge results 
+        
+        # send them to page
+
         conn = db_connect('civic')
-        for index, row in input_vcf_df.iterrows():
+        # input_vcf_df.apply(filter_db)
+        # for index, row in input_vcf_df.iterrows():
 
-            CHROM = row['CHROM']
-            ALT = row['ALT']
-            REF = row['REF']
-            POS = row['POS']
+        #     CHROM = row['CHROM']
+        #     ALT = row['ALT']
+        #     REF = row['REF']
+        #     POS = row['POS']
             
-            where = f""" WHERE ALT='{ALT}' AND\
-                    REF='{REF}' AND\
-                    POS='{POS}' AND\
-                    CHROM='{CHROM}' """
+        #     where = f""" WHERE ALT='{ALT}' AND\
+        #             REF='{REF}' AND\
+        #             POS='{POS}' AND\
+        #             CHROM='{CHROM}' """
                 
-            query = f"SELECT GN FROM civic_variants {where};"
-            cur = conn.cursor() 
-            cur.execute(query)
-            hgnc_symbol = cur.fetchone()
-            cur.close()
-            conn.commit()
+        #     query = f"SELECT GN FROM civic_variants {where};"
+        #     cur = conn.cursor() 
+        #     cur.execute(query)
+        #     hgnc_symbol = cur.fetchone()
+        #     cur.close()
+        #     conn.commit()
             
-            elem = dict(
-                hgnc_symbol=hgnc_symbol,
-                chrom=CHROM,
-                alt=ALT,
-                ref=REF,
-                pos=POS,
-            )
+        #     elem = dict(
+        #         hgnc_symbol=hgnc_symbol,
+        #         chrom=CHROM,
+        #         alt=ALT,
+        #         ref=REF,
+        #         pos=POS,
+        #     )
 
-            print(elem)
+        #     print(elem)
 
-            out_arr.append(elem)
+        #     out_arr.append(elem)
 
         return render_template('results.html', results=out_arr)
     
@@ -451,14 +461,23 @@ def list_results(input_vcf_df):
         err_handler(err)
         return render_template('home.html')
 
+
+@bp1.route('/', methods=["GET", "POST"])
+@bp1.route('/anasayfa', methods=["GET", "POST"])
 def upload_vcf_file():
     try:
+        print("in upload_vcf_file")
         if request.method == 'POST':
             file = request.files['vcf_file']
             if file.filename == '':
                 flash('Please select a file')
             elif file and allowed_file(file.filename):
-                input_vcf_df = vcf_to_df(file)
+                content = file.read() 
+                if(content == b''b''):
+                    flash('Yüklediğiniz dosyada veri bulunamadı.')
+                    return render_template("home.htmll")
+                file_content = content.decode("utf-8")
+                input_vcf_df = read_vcf_from_str(file_content)
                 if input_vcf_df is None:  
                     flash('Uploaded file is empty.')
                 else:
@@ -475,11 +494,64 @@ def upload_vcf_file():
 # view functions for rendering html pages
 
 def home_page():
+    print("in home_page")
     return render_template("home.html")
 
 
-def add_data():
+def add_data_page():
+    print("in add_data page")
     return render_template("veri-ekle.html")
+
+def insert_data(df):
+    try:
+        cwd = os.getcwd()
+        fpath=f'{cwd}\\Temp\\inserted.csv'
+        df.to_csv(fpath, index=False)
+        conn = db_connect(config.USER_DB_NAME)
+        cur = conn.cursor()
+        query = f'''COPY VARIANT(CHROM,POS,VAR_ID,REF,ALT,QUAL,FILTER,INFO)
+            FROM '{fpath}'
+            DELIMITER ','
+            CSV HEADER; '''
+        cur.execute(query)
+        conn.commit()
+        conn.close()
+        flash('Dosya başarıyla veritabanına eklendi.')
+        return render_template("veri-ekle.html")
+    except Exception as err:
+        err_handler(err)
+        conn.rollback()
+        conn.close()
+        return render_template("veri-ekle.html")
+
+@bp1.route('/veri-ekle', methods=["GET", "POST"])
+def add_data():
+    try:
+        print("in add_data")
+        if request.method == 'POST':
+            file = request.files['insert_vcf_file']
+            if file.filename == '':
+                flash('Lütfen bir dosya seçiniz.')
+                return render_template("veri-ekle.html")
+            elif file and allowed_file(file.filename):
+                content = file.stream.read() 
+                if(content == b''b''):
+                    flash('Yüklediğiniz dosyada veri bulunamadı.')
+                    return render_template("veri-ekle.html")
+                
+                file_content = content.decode("utf-8")
+                input_vcf_df = read_vcf_from_str(file_content)
+                if input_vcf_df is None:  
+                    flash('Yüklediğiniz dosyada veri bulunamadı')
+                    return render_template("veri-ekle.html")
+                return insert_data(input_vcf_df)
+            else:
+                flash('Lütfen VCF uzantılı bir dosya yükleyin.')
+                return render_template("veri-ekle.html")
+        else: return render_template("veri-ekle.html")
+    except Exception as err:
+        err_handler(err)
+        return render_template("veri-ekle.html")
 
 def excel_to_df(path):
     try:
@@ -494,3 +566,6 @@ def dict_page():
     if nomenc is None: isNone = True
     else: isNone = False
     return render_template('dict.html', nomenc=nomenc, isNone=isNone)
+
+
+app.register_blueprint(bp1)

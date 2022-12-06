@@ -10,9 +10,12 @@ import common_functions
 
 if __name__ == "__main__":
     
-    # conn = common_functions.db_connect(db_config.CIVIC_DB_NAME)
+    conn = common_functions.db_connect(db_config.CIVIC_DB_NAME)
 
-    # civic.import_civic_data(conn)
+    civic.import_civic_data(conn)
+        
+    if conn:
+       conn.close()
     
     # conn = db_connect(db_config.CLINGEN_DB_NAME)
 

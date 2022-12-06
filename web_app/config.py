@@ -12,6 +12,7 @@ HOST_NAME = 'localhost'
 PORT_NAME = '5432'
 CLINVAR_DB_NAME = 'clinvar'
 CIVIC_DB_NAME = 'civic'
+USER_DB_NAME = 'userdb'
 DB_PWD = 'test'
 ALLOWED_EXTENSIONS = {'vcf'}
 

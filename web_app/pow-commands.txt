@@ -3,3 +3,6 @@ pip install "setuptools<58" --upgrade
 pip uninstall pyvcf
 pip install pyvcf
 Set-ExecutionPolicy Unrestricted -Scope Processs
+
+
+get-ExecutionPolicy

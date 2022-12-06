@@ -1,4 +1,5 @@
 from asyncio.windows_events import NULL
+import io
 import pandas as pd
 import sys
 import db_config
@@ -29,6 +30,7 @@ def insert_into_db(conn, query, record):
         cur.close()
         conn.commit()
     except Exception as err:
+        print(cur.mogrify(query))
         print ("Exception has occured:", err)
         print ("Exception type:", type(err))
         err_type, err_obj, traceback = sys.exc_info()
@@ -46,12 +48,40 @@ def insert_into_db(conn, query, record):
         conn.rollback()
 
 
-# veritabanına verilen record'u verilen query ile insert eder.
-# insert edilen yeni satırın id'sini döner.
-def insert_into_db_returning_id(conn, query, record):
+def insert_csv(conn, fpath, tbl_name, tbl_cols):
     try:
         cur = conn.cursor()
-        #print(cur.mogrify(query, record))
+        query = f'''COPY {tbl_name}{tbl_cols}
+            FROM '{fpath}'
+            DELIMITER ','
+            CSV HEADER; '''
+
+        cur.execute(query)
+        conn.commit()
+    except Exception as err:
+        print("in function  insert csv")
+        print ("Exception has occured:", err)
+        print ("Exception type:", type(err))
+        err_type, err_obj, traceback = sys.exc_info()
+        line_num = traceback.tb_lineno
+        # print the connect() error
+        print ("\npsycopg2 ERROR:", err, "on line number:", line_num)
+        print ("psycopg2 traceback:", traceback, "-- type:", err_type)
+
+        # psycopg2 extensions.Diagnostics object attribute
+        print ("\nextensions.Diagnostics:", err.diag)
+
+        # print the pgcode and pgerror exceptions
+        print ("pgerror:", err.pgerror)
+        print ("pgcode:", err.pgcode, "\n")
+        conn.rollback()
+
+# veritabanına verilen record'u verilen query ile insert eder.
+# insert edilen yeni satırın id'sini döner.
+def insert_into_db_returning_id_V1(conn, query, record):
+    try:
+        cur = conn.cursor()
+        # print(cur.mogrify(query, record))
         cur.execute(query, record)
         data = cur.fetchone()
         cur.close()
@@ -78,8 +108,9 @@ def insert_into_db_returning_id(conn, query, record):
 
 # veritabanına verilen record'u verilen query ile insert eder.
 # insert edilen yeni satırın id'sini döner.
-def insert_into_db_returning_id(conn, query):
+def insert_into_db_returning_id_V2(conn, query):
     try:
+        print(query)
         cur = conn.cursor()
         cur.execute(query)
         data = cur.fetchone()
@@ -87,13 +118,13 @@ def insert_into_db_returning_id(conn, query):
         conn.commit()
         return data[0] # id, primary key
     except Exception as err:
+        print(err.msg)
         print ("Exception has occured:", err, "on line number:", line_num)
         print ("Exception type:", type(err))
         err_type, err_obj, traceback = sys.exc_info()
         line_num = traceback.tb_lineno
         print ("psycopg2 traceback:", traceback, " type:", err_type)
         # psycopg2 extensions.Diagnostics object attribute
-        print ("\nextensions.Diagnostics:", err.diag)
         # print the pgcode and pgerror exceptions
         print ("pgerror:", err.pgerror)
         print ("pgcode:", err.pgcode, "\n")
@@ -115,6 +146,17 @@ def is_iterable(var):
         return True
     except TypeError:
         return False
+
+
+def read_vcf(path):
+    with open(path, 'r') as f:
+        lines = [l for l in f if not l.startswith('##')]
+    return pd.read_csv(
+        io.StringIO(''.join(lines)),
+        dtype={'#CHROM': str, 'POS': int, 'ID': str, 'REF': str, 'ALT': str,
+               'QUAL': str, 'FILTER': str, 'INFO': str},
+        sep='\t'
+    ).rename(columns={'#CHROM': 'CHROM'})
 
 
 def check_value(val):
