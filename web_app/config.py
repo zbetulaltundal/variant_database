@@ -10,10 +10,14 @@ TEMPLATES_FOLDER = 'templates'
 DB_USER = 'postgres'
 HOST_NAME = 'localhost'
 PORT_NAME = '5432'
+DB_PWD = 'test'
+DB_STRING = f"postgres://{DB_USER}:{DB_PWD}@{HOST_NAME}:{PORT_NAME}"
+
 CLINVAR_DB_NAME = 'clinvar'
 CIVIC_DB_NAME = 'civic'
+
+
 USER_DB_NAME = 'userdb'
-DB_PWD = 'test'
 ALLOWED_EXTENSIONS = {'vcf'}
 
 DICT_EXCEL_PATH = 'sozluk.xlsx'

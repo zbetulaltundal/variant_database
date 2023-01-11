@@ -1,12 +1,25 @@
-import os
-import common_functions 
+import os 
 import re
 import sys
 import io
 import pandas as pd
 
+from config import (
+    CIVIC_DATA_PATH
+)
 
-civic_cols=['Allele', 'Consequence', 'SYMBOL', 'Entrez Gene ID',
+from db_utils import(
+    insert_csv,
+    insert_into_db_returning_id_V1,
+)
+
+from utils import(
+    check_var,
+    read_vcf,
+    err_handler
+)
+
+civic_csq_cols=['Allele', 'Consequence', 'SYMBOL', 'Entrez Gene ID',
  'Feature_type', 'Feature', 'HGVSc', 'HGVSp', 'CIViC Variant Name', 
  'CIViC Variant ID', 'CIViC Variant Aliases', 'CIViC HGVS', 
  'Allele Registry ID', 'ClinVar IDs', 'CIViC Variant Evidence Score', 'CIViC Entity Type', 'CIViC Entity ID', 
@@ -48,18 +61,16 @@ def insert_info_to_db(info_str, conn):
             val = item_data[1]
 
             if key=="CSQ":
-                for csq_val, csq_key in zip(val.split("|"), civic_cols):
-                    t_csq_val = common_functions.check_var(csq_val)
+                for csq_val, csq_key in zip(val.split("|"), civic_csq_cols):
+                    t_csq_val = check_var(csq_val)
                     csq_key_f = csq_key.replace(" ", "_")
                     info_dict[csq_key_f] = t_csq_val
 
             if key in info_dict:
                 info_dict[key] = val
+                if key=="GN": print(info_dict[key])
 
         info_id = None
-        
-        civic_cols.append("GN")
-        civic_cols.append("VT")
         
         info_values = info_dict.values()
 
@@ -76,19 +87,13 @@ def insert_info_to_db(info_str, conn):
         VALUES"""
         format_spec =f' ({(len(info_values) -1)*("%s,")} %s) RETURNING ID;'
         record=tuple(info_values)
-        info_id = common_functions.insert_into_db_returning_id_V1(conn, f"{query}{format_spec}", record)
+        info_id = insert_into_db_returning_id_V1(conn, f"{query}{format_spec}", record)
 
         return info_id
 
     except Exception as err:
         print("in function insert_info_to_db")
-        print ("Exception has occured:", err)
-        print ("Exception type:", type(err))
-        err_type, err_obj, traceback = sys.exc_info()
-        line_num = traceback.tb_lineno
-        # print the connect() error
-        print ("\nERROR:", err, "on line number:", line_num)
-        print ("traceback:", traceback, "-- type:", err_type)
+        err_handler(err)
 
 def print_list(l):
     for item in l:
@@ -107,18 +112,13 @@ def read_vcf(path):
 
 def import_civic_data(conn):
     
-    # open the csv data
     cwd = os.getcwd()  # Get the current working directory
-    vcf_path = f'{cwd}\\data\\nightly-civic_accepted_and_submitted.vcf'
-    df = common_functions.read_vcf(vcf_path)
-    df['INFO_ID'] = df['INFO'].progress_apply(insert_info_to_db, conn=conn)
+    vcf_path = f'{cwd}\\{CIVIC_DATA_PATH}' 
+    df = read_vcf(vcf_path)
 
+    df['INFO_ID'] = df['INFO'].progress_apply(insert_info_to_db, conn=conn)
     df.drop(columns="INFO", inplace=True)
     df.to_csv("temp\\civic_variants.csv", index=False)
-
     cwd = os.getcwd()
     fpath = f'{cwd}\\temp\\civic_variants.csv'
-    common_functions.insert_csv(conn, fpath, "VARIANT", "(CHROM,POS,ID,REF,ALT,QUAL,FILTER,INFO_ID)")
-
-
-    # print_list(tuple(replace_cols(civic_cols)))
+    insert_csv(conn, fpath, "VARIANT", "CHROM,POS,VAR_ID,REF,ALT,QUAL,FILTER,INFO_ID")

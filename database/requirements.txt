@@ -4,5 +4,5 @@ numpy
 pandas
 psycopg2
 sqlalchemy
-
+tqdm
 ###### Requirements with Version Specifiers ######
