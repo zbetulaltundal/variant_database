@@ -1,4 +1,11 @@
-# @author: Zeynep Betül Altundal
+''' @author: Zeynep Betül Altundal
+how to run?
+python main.py --dbname=<dataset name>
+dataset name options: civic, clingen, clinvar, pharmgkb, uniprot
+example:
+python main.py --dbname=clinvar
+
+'''
 import argparse
 
 from clinvar_import import(

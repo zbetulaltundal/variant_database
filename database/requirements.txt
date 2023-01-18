@@ -1,8 +1,11 @@
 ###### Requirements without Version Specifiers ######
-PyVCF
-numpy
-pandas
-psycopg2
 sqlalchemy
+pandas
 tqdm
+timeit
+numpy
+functools
+argparse
+psycopg2
+re 
 ###### Requirements with Version Specifiers ######

@@ -27,4 +27,16 @@ $(document).ready(function() {
         ]
     });
     table.columns().visible( false );
+    $("#variant-table").tabs( {
+        "show": function(event, ui) {
+            var oTable = $('div.dataTables_scrollBody>table.display', ui.panel).dataTable();
+            if ( oTable.length > 0 ) {
+                oTable.fnAdjustColumnSizing();
+            }
+        }
+    } );
+    $('#togglers').on('change', function (e) {    
+        var width = document.getElementById('container').style.offsetWidth;
+        if(width > 116)
+    });
 } );

@@ -4,13 +4,19 @@ from asyncio.windows_events import NULL
 import psycopg2 as psql
 import config
 import sys
+import os
 
 def err_handler(err):
     print ("Exception has occured:", err)
     print ("Exception type:", type(err))
     err_type, err_obj, traceback = sys.exc_info()
-    if traceback is not None: line_num = traceback.tb_lineno
-    else: line_num = "not found"
+    if traceback is not None: 
+        fname = os.path.split(traceback.tb_frame.f_code.co_filename)[1]
+        line_num = traceback.tb_lineno
+    else: 
+        fname = "not found"
+        line_num = "not found"
+    print("in file:", fname)
     print ("\nERROR:", err, "on line number:", line_num)
     print ("traceback:", traceback, "-- type:", err_type)
 
@@ -103,4 +109,76 @@ def record_cmpr(rec1, rec2):
     elif rec1 == rec2: return True
     
     return False
+
+import io
+from typing import Literal
+import numpy as np
+import pandas as pd
+
+# custom modules
+
+from utils import err_handler
+
+def join_data_frames(data_frames, join_cols=[], join_type='inner'):
+    try:
+        first_iter = True
+        df1 = data_frames[0]
+        for df2 in data_frames:
+            if first_iter == False:
+                if check_df(df1) == False and check_df(df2): 
+                    df1 = df2
+                elif check_df(df2) == False and check_df(df1): continue
+                elif (check_df(df1) or check_df(df2)) == False: continue
+                elif check_df(df1) and check_df(df2):
+                    if join_type == 'inner':df1 = pd.merge(df1, df2, on=join_cols, how="inner") 
+                    elif join_type == 'outer':df1 = pd.merge(df1, df2, on=join_cols, how="outer") 
+                    elif join_type == 'left':df1 = pd.merge(df1, df2, on=join_cols, how="left") 
+                    elif join_type == 'right':df1 = pd.merge(df1, df2, on=join_cols, how="right") 
+                    elif join_type == 'cross':df1 = pd.merge(df1, df2, on=join_cols, how="cross") 
+
+            first_iter = False
+        
+        return df1
+
+    except Exception as err:
+        err_handler(err)
+
+def check_df(df):
+    # returns true for valid df
+    if df is None: return False
+    if df.empty: return False
+
+    return True
+
+def excel_to_df(path):
+    try:
+        return pd.read_excel(path)
+
+    except Exception as err:
+        err_handler(err)
+        return None
+
+
+def read_vcf_from_str(file_content):
+    """ Store data in the vcf file on a pandas dataframe 
+    / Vcf dosyasındaki verileri bir pandas dataframe'e depolar
+    Parameters / Parametreler
+    ----------
+    file_content : str
+        The content of vcf file (vcf dosyasının içeriği)
+
+    Returns vcf file in the pandas dataframe format
+        / pandas dataframe formatındaki vcf dosyası
+    """
+    try:
+        lines = [l for l in io.StringIO(file_content) if not l.startswith('##')]
+        return pd.read_csv(
+            io.StringIO(''.join(lines)),
+            dtype={'#CHROM': str, 'POS': int, 'ID': str, 'REF': str, 'ALT': str,
+                'QUAL': str, 'FILTER': str, 'INFO': str},
+            sep='\t'
+        ).rename(columns={'#CHROM': 'CHROM'})
+    except Exception as err:
+        err_handler(err)
+        return None
 

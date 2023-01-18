@@ -4,21 +4,9 @@
 -- Annotation Text
 -- allele Function
 
--- drugs seperated by , ; / which means what 
-CREATE TABLE DRUG (
-    ID bigserial PRIMARY KEY,
-    DRUG TEXT
-);
-
-CREATE TABLE PHENOTYPE (
-    ID bigserial PRIMARY KEY,
-    PHENOTYPE_NAME TEXT
-);
-
-CREATE TABLE pharmgkb (
+CREATE TABLE VARIANT (
     ID bigserial PRIMARY KEY,
     Clinical_Annotation_ID TEXT, -- 'Clinical Annotation ID'
-    VARIANT TEXT, -- 'Variant/Haplotypes'
     GENE TEXT, -- 'Gene'
     LEVEL_OF_EVIDENCE TEXT, -- 'Level of Evidence'
     LEVEL_OVERRIDE TEXT, --  'Level Override'
@@ -38,13 +26,33 @@ CREATE TABLE pharmgkb (
     Evidence_URL TEXT, -- 'Evidence URL'
     Evidence_PMID TEXT, -- 'PMID'
     Evidence_Summary TEXT, --  'Summary'
-    Evidence_Score TEXT, --  'Score_y'
-    DRUG_ID BIGINT,
-    PHENOTYPE_ID BIGINT,
-    CONSTRAINT fk_DRUG
-      FOREIGN KEY(DRUG_ID) 
-	      REFERENCES DRUG(ID),
-    CONSTRAINT fk_PHENOTYPE
-      FOREIGN KEY(PHENOTYPE_ID) 
-	      REFERENCES PHENOTYPE(ID)
+    Evidence_Score TEXT --  'Score_y'
+);
+
+CREATE TABLE Haplotype (
+    ID bigserial PRIMARY KEY,
+    variant_name TEXT,
+    VARIANT_ID INT,
+    CONSTRAINT fk_haplotypes
+      FOREIGN KEY(VARIANT_ID) 
+	      REFERENCES VARIANT(ID)
+);
+
+-- drugs seperated by , ; / which means what 
+CREATE TABLE DRUG (
+    ID bigserial PRIMARY KEY,
+    DRUG_NAME TEXT,
+    VARIANT_ID INT,
+    CONSTRAINT fk_VARIANT_DRUG
+      FOREIGN KEY(VARIANT_ID) 
+	      REFERENCES VARIANT(ID)
+);
+
+CREATE TABLE PHENOTYPE (
+    ID bigserial PRIMARY KEY,
+    PHENOTYPE_NAME TEXT,
+    VARIANT_ID INT,
+    CONSTRAINT fk_VARIANT_PHEN
+      FOREIGN KEY(VARIANT_ID) 
+	      REFERENCES VARIANT(ID)
 );

@@ -33,6 +33,17 @@ def insert_into_db(conn, query, record):
         err_handler(err)
         conn.rollback()
 
+def fetch_one(conn, query):
+    try:
+        cur = conn.cursor() 
+        cur.execute(query)
+        res = cur.fetchone()
+        cur.close()
+        conn.commit()
+        return res
+    except Exception as err:
+        err_handler(err)
+        return None
 
 def insert_csv(conn, fpath, tbl_name, tbl_cols=None, sep=","):
     try:

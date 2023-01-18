@@ -19,46 +19,144 @@ pharmgkb_cols = ["Clinical_Annotation_ID", "VARIANT", "GENE", "LEVEL_OF_EVIDENCE
              "Evidence_PMID", "Evidence_Summary", "Evidence_Score"]
 
 
-pharmgkb_col_name_mapper = {"GENE":"HGNC GENE SYMBOL", "LEVEL_OF_EVIDENCE": "EVIDENCE LEVEL"}
-
-civic_col_name_mapper = {
-    'GN': 'HGNC GENE SYMBOL', 
-    'VT': 'CIViC Variant Name', 
-    'Allele': 'Allele', 'Consequence': 'Consequence', 'Entrez_Gene_ID': 'Entrez Gene ID', 'Feature_type': 'CIViC Feature Type', 
-    'Feature': 'CIViC Feature', 'HGVSc': 'HGVSc', 'HGVSp': 'HGVSp', 
-    'CIViC_Variant_ID': 'CIViC Variant ID', 
-    'CIViC_Variant_Aliases': 'CIViC Variant Aliases', 'CIViC_HGVS': 'CIViC HGVS', 
-    'Allele_Registry_ID': 'Allele Registry ID', 'ClinVar_IDs': 'ClinVar IDs', 'CIViC_Variant_Evidence_Score': 'CIViC Variant Evidence Score', 
-    'CIViC_Entity_Type': 'CIViC Entity Type', 'CIViC_Entity_ID': 'CIViC Entity ID', 'CIViC_Entity_URL': 'CIViC Entity URL', 'CIViC_Entity_Source': 'CIViC Entity Source', 
-    'CIViC_Entity_Variant_Origin': 'CIViC Entity Variant Origin', 'CIViC_Entity_Status': 'CIViC Entity Status', 
-    'CIViC_Entity_Clinical_Significance': 'CIViC Entity Clinical Significance', 
-    'CIViC_Entity_Direction': 'CIViC Entity Direction', 'CIViC_Entity_Disease': 'CIViC Entity Disease', 
-    'CIViC_Entity_Drugs': 'CIViC Entity Drugs', 'CIViC_Entity_Drug_Interaction_Type': 'CIViC Entity Drug Interaction Type', 'CIViC_Evidence_Phenotypes': 'CIViC Evidence Phenotypes', 
-    'CIViC_Evidence_Level': 'CIViC Evidence Level', 'CIViC_Evidence_Rating': 'CIViC Evidence Rating', 'CIViC_Assertion_ACMG_Codes': 'CIViC Assertion ACMG Codes', 
-    'CIViC_Assertion_AMP_Category': 'CIViC Assertion AMP Category', 'CIViC_Assertion_NCCN_Guideline': 'CIViC Assertion NCCN Guideline', 'CIVIC_Assertion_Regulatory_Approval': 'CIVIC Assertion Regulatory Approval', 
-    'CIVIC_Assertion_FDA_Companion_Test': 'CIVIC Assertion FDA Companion Test'}
-
-clingen_col_name_mapper = {"gene_symbol":"HGNC GENE SYMBOL", "gene_id": "HGNC GENE ID", "disease_label": "DISEASE LABEL",
-                        "CLASSIFICATION":"CLINGEN CLASSIFICATION", "disease_id":"MONDO disease id",
-                        "online_report":"CLINGEN URL", "classification_date":"CLINGEN CLASSIFICATION DATE"}
-
 id_cols =  ['CHROM', 'POS', 'REF', 'ALT']
 
 
-clinvar_info_col_name_mapper={
-    "ALLELEID": "ClinVar Allele ID",
-    "CLNHGVS": "ClinVar HGVS",
-    "CLNVC" : "ClinVar VC",
-    "CLNVCSO" : "ClinVar SO",
-    "ORIGIN" : "ClinVar Origin",
-    "AF_ESP" : "AF ESP",
-    "AF_EXAC" : "AF EXAC",
-    "AF_TGP" : "AF TGP",
-    "DBVARID" : "dbVar id",
-    "RS" : "dbSNP id",
-    "SSR" : "SSR"
+pharmgkb_mapper = {
+    "gene":"HGNC Gene Symbol",
+    "Clinical_Annotation_ID":"Clinical Annotation ID", 
+    "level_of_evidence": "Evidence Level", 
+    "LEVEL_OVERRIDE": "LEVEL OVERRIDE", 
+    "LEVEL_MODIFIERS": "LEVEL MODIFIERS", 
+    "SCORE": "SCORE",
+    "PHENOTYPE_CATEGORY":"PHENOTYPE CATEGORY",
+    "PMID_COUNT":"PMID COUNT",
+    "EVIDENCE_COUNT":"EVIDENCE COUNT",
+    "LATEST_HISTORY_DATE":"LATEST HISTORY DATE",
+    "pharmgkb_URL":"pharmgkb URL",
+    "Specialty_Population":"Specialty Population",
+    "Genotype":"Genotype",
+    "ANNOTATION_TEXT":"ANNOTATION TEXT",
+    "Allele_Function":"Allele Function",
+    "Evidence_ID":"Evidence ID",
+    "Evidence_Type":"Evidence Type",
+    "Evidence_URL":"Evidence URL",
+    "Evidence_PMID":"Evidence PMID",
+    "Evidence_Summary":"Evidence Summary",
+    "Evidence_Score":"Evidence Score",
+    "id":"variant_id"
     }
 
-uniprot_variant_col_mapper = {
-    "gene_name":"HGNC GENE SYMBOL"
+'''
+pharmgkb drug names
+pharmgkb haplotypes
+pharmgkb phenotypes
+'''
+
+civic_col_name_mapper = {
+    'gn': 'HGNC Gene Symbol', 
+    'vt': 'CIViC Variant Name', 
+    'allele': 'Allele', 
+    'consequence': 'Consequence', 
+    'symbol': 'Symbol', 
+    'entrez_gene_id': 'Entrez Gene ID', 
+    'feature_type': 'CIViC Feature Type', 
+    'feature': 'CIViC Feature', 
+    'hgvsc': 'HGVSc', 
+    'hgvsp': 'HGVSp', 
+    'civic_variant_name': 'CIViC Variant Name', 
+    'civic_variant_id': 'CIViC Variant ID', 
+    'civic_variant_aliases': 'CIViC Variant Aliases',
+     'civic_hgvs': 'CIViC HGVS', 
+     'allele_registry_id': 'Allele Registry ID', 
+     'clinvar_ids': 'ClinVar IDs',
+     'civic_variant_evidence_score': 'CIViC Variant Evidence Score', 
+     'civic_entity_type': 'CIViC Entity Type', 
+     'civic_entity_id': 'CIViC Entity ID', 
+    'civic_entity_url': 'CIViC Entity URL', 
+    'civic_entity_source': 'CIViC Entity Source', 
+    'civic_entity_variant_origin': 'CIViC Entity Variant Origin', 
+    'civic_entity_status': 'CIViC Entity Status', 
+    'civic_entity_clinical_significance': 'CIViC Entity Clinical Significance', 
+    'civic_entity_direction': 'CIViC Entity Direction', 
+    'civic_entity_disease': 'CIViC Entity Disease', 
+    'civic_entity_drugs': 'CIViC Entity Drugs', 
+    'civic_entity_drug_interaction_type': 'CIViC Entity Drug Interaction Type', 
+    'civic_evidence_phenotypes': 'CIViC Evidence Phenotypes', 
+    'civic_evidence_level': 'CIViC Evidence Level', 
+    'civic_evidence_rating': 'CIViC Evidence Rating', 
+    'civic_assertion_acmg_codes': 'CIViC Assertion ACMG Codes', 
+    'civic_assertion_amp_category': 'CIViC Assertion AMP Category', 
+    'civic_assertion_nccn_guideline': 'CIViC Assertion NCCN Guideline',
+     'civic_assertion_regulatory_approval': 'CIVIC Assertion Regulatory Approval', 
+     'civic_assertion_fda_companion_test': 'CIVIC Assertion FDA Companion Test', 
+     'var_id': 'dbSNP RefSNP ID',
+     }
+
+#other_cols = ["CHROM", "POS", "REF", "ALT", "QUAL"]
+
+clingen_col_name_mapper = {
+    "gene_symbol":"HGNC Gene Symbol", 
+    "HGNC_ID": "HGNC Gene ID", 
+    "disease_label": "Disease Label",
+    "MONDO_DISEASE_ID": "MONDO Disease ID",
+    "MOI": "Mode of Inheritance",
+    "SOP": "SOP",
+    "CLASSIFICATION":"ClinGen Classification", 
+    "online_report":"ClinGen URL", 
+    "classification_date":"ClinGen Classification Date",
+    "GCEP" :"GCEP"
+    }
+
+
+uniprot_col_mapper = {
+    "id":"variant_id",
+    "gene_name":"HGNC Gene Symbol",
+    "AC" : "UniProtKB Accession",
+    "variant_aa_change" : "Variant AA Change",
+    "source_db_id" : "dbSNP identifier",
+    "consequence_type" : "UniProt Consequence Type",   
+    "clinical_significance" : "Clinical Significance",
+    "phenotype_disease" : "Phenotype disease", 
+    "phenotype_disease_source" : "Phenotype Disease Source",
+    "cytogenetic_band" : "Cytogenetic Band",
+    "chromosome_coordinate" : "Chromosome Coordinate",
+    "ensembl_gene_ID" : "Ensembl Gene ID",
+    "ensembl_transcript_ID" : "Ensembl Transcript ID",
+    "ensembl_translation_ID" : "Ensembl Translation ID"
 }
+
+# Uniprot Evidence Names
+
+# USER DB HAS ONLY FOLLOWING
+other_cols = ["CHROM", "POS", "VAR_ID", "REF", "ALT", "QUAL"]
+
+
+clinvar_mapper={
+    "id":"info_id",
+    "alleleid": "ClinVar Allele ID",
+    "clnhgvs": "ClinVar HGVS",
+    "clnvc" : "ClinVar Variant Type",
+    "clnvcso" : "ClinVar SO",
+    "origin" : "ClinVar Origin",
+    "af_esp" : "AF ESP",
+    "af_exac" : "AF EXAC",
+    "af_tgp" : "AF TGP",
+    "dbvarid" : "dbVar id",
+    "rs" : "dbSNP id",
+    "ssr" : "SSR",
+    "clinvar_id":"ClinVar Variation ID",
+    # "CLNREVSTAT":"ClinVar Review Status",
+    }
+
+# ["CHROM", "POS", "CLINVAR_ID", "REF", "ALT", "QUAL"]
+# clndisdb
+#     FILTER TEXT,
+#     INFO_ID INT,
+# gene info 
+# clnvi
+# mc
+# clnsig
+# clnsigconf
+# clnsigincl
+# review status

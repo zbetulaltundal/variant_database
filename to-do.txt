@@ -1,2 +1,0 @@
-pharmgkb de VARIANT sütununa ayrı bir tablouya taşımak
-Evidence_Type sütununu da

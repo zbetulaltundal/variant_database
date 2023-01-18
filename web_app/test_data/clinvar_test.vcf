@@ -1,13 +1,32 @@
-##fileformat=VCFv4.2
-##fileDate=20220920
-##reference=ftp://ftp.ncbi.nih.gov/genbank/genomes/Eukaryotes/vertebrates_mammals/Homo_sapiens/GRCh37/special_requests/GRCh37-lite.fa.gz
-##source=CIViCpy_v2.0.0-alpha
-##aboutURL=https://civicdb.org/help/evidence/overview
-##INFO=<ID=GN,Number=1,Type=String,Description="HGNC Gene Symbol">
-##INFO=<ID=VT,Number=1,Type=String,Description="CIViC Variant Name">
-##INFO=<ID=CSQ,Number=.,Type=String,Description="Consequence annotations from CIViC. Format: Allele|Consequence|SYMBOL|Entrez Gene ID|Feature_type|Feature|HGVSc|HGVSp|CIViC Variant Name|CIViC Variant ID|CIViC Variant Aliases|CIViC HGVS|Allele Registry ID|ClinVar IDs|CIViC Variant Evidence Score|CIViC Entity Type|CIViC Entity ID|CIViC Entity URL|CIViC Entity Source|CIViC Entity Variant Origin|CIViC Entity Status|CIViC Entity Clinical Significance|CIViC Entity Direction|CIViC Entity Disease|CIViC Entity Drugs|CIViC Entity Drug Interaction Type|CIViC Evidence Phenotypes|CIViC Evidence Level|CIViC Evidence Rating|CIViC Assertion ACMG Codes|CIViC Assertion AMP Category|CIViC Assertion NCCN Guideline|CIVIC Assertion Regulatory Approval|CIVIC Assertion FDA Companion Test ">
+##fileformat=VCFv4.1
+##fileDate=2022-11-13
+##source=ClinVar
+##reference=GRCh38
+##ID=<Description="ClinVar Variation ID">
+##INFO=<ID=AF_ESP,Number=1,Type=Float,Description="allele frequencies from GO-ESP">
+##INFO=<ID=AF_EXAC,Number=1,Type=Float,Description="allele frequencies from ExAC">
+##INFO=<ID=AF_TGP,Number=1,Type=Float,Description="allele frequencies from TGP">
+##INFO=<ID=ALLELEID,Number=1,Type=Integer,Description="the ClinVar Allele ID">
+##INFO=<ID=CLNDN,Number=.,Type=String,Description="ClinVar's preferred disease name for the concept specified by disease identifiers in CLNDISDB">
+##INFO=<ID=CLNDNINCL,Number=.,Type=String,Description="For included Variant : ClinVar's preferred disease name for the concept specified by disease identifiers in CLNDISDB">
+##INFO=<ID=CLNDISDB,Number=.,Type=String,Description="Tag-value pairs of disease database name and identifier, e.g. OMIM:NNNNNN">
+##INFO=<ID=CLNDISDBINCL,Number=.,Type=String,Description="For included Variant: Tag-value pairs of disease database name and identifier, e.g. OMIM:NNNNNN">
+##INFO=<ID=CLNHGVS,Number=.,Type=String,Description="Top-level (primary assembly, alt, or patch) HGVS expression.">
+##INFO=<ID=CLNREVSTAT,Number=.,Type=String,Description="ClinVar review status for the Variation ID">
+##INFO=<ID=CLNSIG,Number=.,Type=String,Description="Clinical significance for this single variant; multiple values are separated by a vertical bar">
+##INFO=<ID=CLNSIGCONF,Number=.,Type=String,Description="Conflicting clinical significance for this single variant; multiple values are separated by a vertical bar">
+##INFO=<ID=CLNSIGINCL,Number=.,Type=String,Description="Clinical significance for a haplotype or genotype that includes this variant. Reported as pairs of VariationID:clinical significance; multiple values are separated by a vertical bar">
+##INFO=<ID=CLNVC,Number=1,Type=String,Description="Variant type">
+##INFO=<ID=CLNVCSO,Number=1,Type=String,Description="Sequence Ontology id for variant type">
+##INFO=<ID=CLNVI,Number=.,Type=String,Description="the variant's clinical sources reported as tag-value pairs of database and variant identifier">
+##INFO=<ID=DBVARID,Number=.,Type=String,Description="nsv accessions from dbVar for the variant">
+##INFO=<ID=GENEINFO,Number=1,Type=String,Description="Gene(s) for the variant reported as gene symbol:gene id. The gene symbol and id are delimited by a colon (:) and each pair is delimited by a vertical bar (|)">
+##INFO=<ID=MC,Number=.,Type=String,Description="comma separated list of molecular consequence in the form of Sequence Ontology ID|molecular_consequence">
+##INFO=<ID=ORIGIN,Number=.,Type=String,Description="Allele origin. One or more of the following values may be added: 0 - unknown; 1 - germline; 2 - somatic; 4 - inherited; 8 - paternal; 16 - maternal; 32 - de-novo; 64 - biparental; 128 - uniparental; 256 - not-tested; 512 - tested-inconclusive; 1073741824 - other">
+##INFO=<ID=RS,Number=.,Type=String,Description="dbSNP ID (i.e. rs number)">
+##INFO=<ID=SSR,Number=1,Type=Integer,Description="Variant Suspect Reason Codes. One or more of the following values may be added: 0 - unspecified, 1 - Paralog, 2 - byEST, 4 - oldAlign, 8 - Para_EST, 16 - 1kg_failed, 1024 - other">
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
-1	8073509	691	C	A	.	.	GN=ERRFI1;VT=E384*;CSQ=A|Stop_Gained&Loss_Of_Function_Variant|ERRFI1|54206|transcript|ENST00000377482.5|||E384*|691|E384X&GLU384TER|NC\x5F000001\x2E10\x3Ag\x2E8073509C\x3EA|CA338219584|NONE_FOUND|5.0|evidence|1724|https://civicdb.org/links/evidence/1724|24550739_(PUBMED)|SOMATIC|accepted|SENSITIVITYRESPONSE|SUPPORTS|Cholangiocarcinoma_(DOID_4947)|Erlotinib_(NCIt_ID_C65530)|||C|2|||||
-1	11177096	609	C	A	.	.	GN=MTOR;VT=M2327I;CSQ=A|Missense_Variant|MTOR|2475|transcript|ENST00000361445.4|ENST00000361445.4:c.6981G>T||M2327I|609|MET2327ILE|NC\x5F000001\x2E10\x3Ag\x2E11177096C\x3EA&ENST00000361445\x2E4\x3Ac\x2E6981G\x3ET|CA338383476|NONE_FOUND|7.0|evidence|1544|https://civicdb.org/links/evidence/1544|27279227_(PUBMED)|SOMATIC|accepted|RESISTANCE|SUPPORTS|Breast_Cancer_(DOID_1612)|MTOR_Kinase_Inhibitor_AZD8055_(NCIt_ID_C78856)|||D|4|||||,A|Missense_Variant|MTOR|2475|transcript|ENST00000361445.4|ENST00000361445.4:c.6981G>T||M2327I|609|MET2327ILE|NC\x5F000001\x2E10\x3Ag\x2E11177096C\x3EA&ENST00000361445\x2E4\x3Ac\x2E6981G\x3ET|CA338383476|NONE_FOUND|7.0|evidence|10082|https://civicdb.org/links/evidence/10082|27279227_(PUBMED)|SOMATIC|submitted|SENSITIVITYRESPONSE|SUPPORTS|Breast_Cancer_(DOID_1612)|Sirolimus_(NCIt_ID_C1212)&RapaLink-1|SUBSTITUTES||D|4|||||,A|Missense_Variant|MTOR|2475|transcript|ENST00000361445.4|ENST00000361445.4:c.6981G>T||M2327I|609|MET2327ILE|NC\x5F000001\x2E10\x3Ag\x2E11177096C\x3EA&ENST00000361445\x2E4\x3Ac\x2E6981G\x3ET|CA338383476|NONE_FOUND|7.0|evidence|1545|https://civicdb.org/links/evidence/1545|27279227_(PUBMED)|SOMATIC|accepted|RESISTANCE|DOES_NOT_SUPPORT|Breast_Cancer_(DOID_1612)|RapaLink-1&Sirolimus_(NCIt_ID_C1212)|SUBSTITUTES||D|3|||||
-1	11184573	542	G	T	.	.	GN=MTOR;VT=S2215Y;CSQ=T|Missense_Variant|MTOR|2475|transcript|ENST00000361445.4|ENST00000361445.4:c.6644C>A||S2215Y|542|SER2215TYR|NC\x5F000001\x2E10\x3Ag\x2E11184573G\x3ET&ENST00000361445\x2E4\x3Ac\x2E6644C\x3EA&NM\x5F004958\x2E3\x3Ac\x2E6644C\x3EA&NP\x5F004949\x2E1\x3Ap\x2ESer2215Tyr|CA16602587|376129|2.0|evidence|1319|https://civicdb.org/links/evidence/1319|24631838_(PUBMED)|SOMATIC|accepted|SENSITIVITYRESPONSE|SUPPORTS|Endometrial_Adenocarcinoma_(DOID_2870)|Sirolimus_(NCIt_ID_C1212)|||D|2|||||
-1	11184580	284	G	A	.	.	GN=MTOR;VT=P2213S;CSQ=A|Missense_Variant&Gain_Of_Function_Variant|MTOR|2475|transcript|ENST00000361445.4|ENST00000361445.4:c.6637C>T||P2213S|284|PRO2213SER|NC\x5F000001\x2E10\x3Ag\x2E11184580G\x3EA&ENST00000361445\x2E4\x3Ac\x2E6637C\x3ET&NM\x5F004958\x2E3\x3Ac\x2E6637C\x3ET&NP\x5F004949\x2E1\x3Ap\x2EPro2213Ser|CA16602798|376358|3.0|evidence|722|https://civicdb.org/links/evidence/722|26490311_(PUBMED)|SOMATIC|accepted|SENSITIVITYRESPONSE|SUPPORTS|Melanoma_(DOID_1909)|Capivasertib_(NCIt_ID_C102564)&PI3K/BET_Inhibitor_LY294002_(NCIt_ID_C148229)|COMBINATION||D|3|||||
+1	925952	1019397	G	A	.	.	ALLELEID=1003021;CLNDISDB=MedGen:CN517202;CLNDN=not_provided;CLNHGVS=NC_000001.11:g.925952G>A;CLNREVSTAT=criteria_provided,_single_submitter;CLNSIG=Uncertain_significance;CLNVC=single_nucleotide_variant;CLNVCSO=SO:0001483;GENEINFO=SAMD11:148398;MC=SO:0001583|missense_variant;ORIGIN=1;RS=1640863258
+1	925956	1543320	C	T	.	.	ALLELEID=1632777;CLNDISDB=MedGen:CN517202;CLNDN=not_provided;CLNHGVS=NC_000001.11:g.925956C>T;CLNREVSTAT=criteria_provided,_single_submitter;CLNSIG=Likely_benign;CLNVC=single_nucleotide_variant;CLNVCSO=SO:0001483;GENEINFO=SAMD11:148398;MC=SO:0001819|synonymous_variant;ORIGIN=1
+1	925969	1648427	C	T	.	.	ALLELEID=1600580;CLNDISDB=MedGen:CN517202;CLNDN=not_provided;CLNHGVS=NC_000001.11:g.925969C>T;CLNREVSTAT=criteria_provided,_single_submitter;CLNSIG=Likely_benign;CLNVC=single_nucleotide_variant;CLNVCSO=SO:0001483;GENEINFO=SAMD11:148398;MC=SO:0001583|missense_variant;ORIGIN=1
+1	925976	1362713	T	C	.	.	ALLELEID=1396033;CLNDISDB=MedGen:CN517202;CLNDN=not_provided;CLNHGVS=NC_000001.11:g.925976T>C;CLNREVSTAT=criteria_provided,_single_submitter;CLNSIG=Uncertain_significance;CLNVC=single_nucleotide_variant;CLNVCSO=SO:0001483;GENEINFO=SAMD11:148398;MC=SO:0001583|missense_variant;ORIGIN=1

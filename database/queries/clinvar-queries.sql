@@ -1,11 +1,4 @@
-SELECT * FROM CLNVI WHERE INFO_ID IN 
-   (SELECT INFO_ID FROM variant 
-      WHERE ALT='T' AND
-            REF='G' AND
-            POS='1523838' AND
-            CHROM='1');
-	1	1523838	989289	G	T
-  
+
 CREATE TABLE INFO (
     ID  SERIAL PRIMARY KEY, 
     ALLELEID TEXT,
@@ -33,7 +26,8 @@ CREATE TABLE CLNDISDB ( --+
         ON DELETE CASCADE
 );
 
---Gene(s) for the variant reported as gene symbol:gene id. The gene symbol and id are delimited by a colon (:) and each pair is delimited by a vertical bar (|)
+--Gene(s) for the variant reported as gene symbol:gene id. 
+--The gene symbol and id are delimited by a colon (:) and each pair is delimited by a vertical bar (|)
 CREATE TABLE GENEINFO( --+
     ID  SERIAL PRIMARY KEY, 
     GENE_SYMBOL TEXT,
@@ -44,8 +38,6 @@ CREATE TABLE GENEINFO( --+
 	      REFERENCES INFO(ID)
         ON DELETE CASCADE
 );
-
-select GN from info where GN='NSRP1';
 
 CREATE TABLE CLNVI( --+
     ID  SERIAL PRIMARY KEY, 
@@ -115,7 +107,9 @@ CREATE TABLE CLNDN(
         ON DELETE CASCADE
 );
 
---Gene(s) for the variant reported as gene symbol:gene id. The gene symbol and id are delimited by a colon (:) and each pair is delimited by a vertical bar (|)
+-- Gene(s) for the variant reported as 
+-- gene symbol:gene id. 
+-- The gene symbol and id are delimited by a colon (:) and each pair is delimited by a vertical bar (|)
 CREATE TABLE CLNDNINCL(
     ID  SERIAL PRIMARY KEY, 
     CLNDNINCL_GENE_SYMBOL TEXT,
