@@ -12,7 +12,8 @@ from main import app
 from utils import (
     err_handler,
     check_df,
-    join_data_frames
+    join_data_frames,
+    write_csv
 )
 from data_configs import (
     clingen_col_name_mapper,
@@ -37,6 +38,50 @@ def db_connect(db_name):
     except Exception as err:
         err_handler(err)
 
+
+def fetch_variant_data(chrom, pos, ref, alt, hgnc=None):
+    try:
+        data_frames = []
+        df_joined = None
+        civic_df = None
+        clinvar_df = None 
+        pharmgkb_df = None 
+        clingen_df = None
+        where = f"WHERE ALT='{alt}' AND REF='{ref}' AND POS='{pos}' AND CHROM='{chrom}'"
+        if(hgnc is None):
+            civic_df = fetch_from_civic(f"WHERE ALT='{alt}' AND REF='{ref}' AND POS='{pos}' AND CHROM='{chrom}'")
+            clinvar_df = fetch_from_clinvar(where)
+        else:
+            civic_df = fetch_from_civic(f"WHERE ALT='{alt}' AND REF='{ref}' AND POS='{pos}' AND CHROM='{chrom}' AND INFO.GN='{hgnc}'")
+            clinvar_df = fetch_from_clinvar(where, hgnc)
+
+        append_df(civic_df, data_frames)
+        append_df(clinvar_df, data_frames)
+        #user_df = fetch_from_user_db(where)
+        #append_df(user_df, data_frames)
+        if(hgnc is not None):
+            df_joined = join_data_frames(data_frames, ["chrom","pos","ref","alt", "HGNC Gene Symbol"])
+        else:
+            df_joined = join_data_frames(data_frames, ["chrom","pos","ref","alt"])
+
+        if check_df(df_joined):
+            if "HGNC Gene Symbol" in df_joined:
+                data_frames = [df_joined]
+                for hgnc_symbol in df_joined["HGNC Gene Symbol"].unique():
+                    clingen_df = fetch_from_clingen(hgnc_symbol)
+                    append_df(clingen_df, data_frames)
+                    pharmgkb_df = fetch_from_pharmgkb(hgnc_symbol)
+                    append_df(pharmgkb_df, data_frames)
+                    # uniprot_df = fetch_from_uniprot(hgnc_symbol)   
+                    # append_df(uniprot_df, data_frames)   
+
+                    df_joined = join_data_frames([df_joined, pharmgkb_df, clingen_df], ["HGNC Gene Symbol"])
+
+
+        return df_joined, civic_df, clinvar_df, pharmgkb_df, clingen_df
+    
+    except Exception as err:
+        err_handler(err)
 
 
 def fetch_from_psql_db_df(engine, query, col_mapper=None, drop_cols=None):
@@ -67,9 +112,7 @@ def get_info(info_id, info_df_list, conn):
 
 def fetch_from_civic(where):
     try:
-        civic_q = f"""select * from variant
-            INNER JOIN INFO on VARIANT.INFO_ID = INFO.ID {where};"""
-        
+        civic_q = f"""select * from variant INNER JOIN INFO on VARIANT.INFO_ID = INFO.ID {where};"""
         engine = create_engine(f"{config.DB_STRING}/{config.CIVIC_DB_NAME}")
         df = pd.read_sql_query(civic_q, con=engine)
 
@@ -170,7 +213,7 @@ def cv_q_gen(cols, tbl_name, where):
             INNER JOIN INFO on VARIANT.INFO_ID = INFO.ID {where})"""
 
 
-def fetch_from_clinvar(where):
+def fetch_from_clinvar(where, hgnc=None):
     try:
         q = f"""select CHROM, POS, CLINVAR_ID, REF,ALT, QUAL, INFO_ID, ALLELEID,CLNHGVS,CLNVC,CLNVCSO,ORIGIN,AF_ESP,AF_EXAC,AF_TGP,DBVARID,RS,SSR
             from variant
@@ -231,7 +274,11 @@ def fetch_from_clinvar(where):
             if "info_id" in df: drop_cols.append("info_id")
             if "filter" in df: drop_cols.append("filter")
             df_joined.drop(columns=drop_cols, inplace=True)
-           
+        
+        if(hgnc is not None):
+            df_joined = df_joined[df_joined['HGNC Gene Symbol']==hgnc]
+            print(df_joined)
+
         return df_joined
     except Exception as err:
         err_handler(err)
@@ -275,7 +322,7 @@ def insert_data(df):
     try:
         cwd = os.getcwd()
         fpath=f'{cwd}\\Temp\\inserted.csv'
-        df.to_csv(fpath, index=False)
+        write_csv(df, path=fpath, index=False)
         conn = psql.connect(f"{config.DB_STRING}/{config.USER_DB_NAME}")
         cur = conn.cursor()
 
@@ -312,40 +359,8 @@ def list_results(df):
             REF = row['REF']
             POS = row['POS']
             
-            where = f""" WHERE ALT='{ALT}' AND\
-                    REF='{REF}' AND\
-                    POS='{POS}' AND\
-                    CHROM='{CHROM}' """
+            df_joined, _r1, _r2, _r3, _r4 = fetch_variant_data(CHROM, POS, REF, ALT)
             
-            df_joined = None
-            
-            data_frames = []
-            civic_df = fetch_from_civic(where)
-            append_df(civic_df, data_frames)
-            clinvar_df = fetch_from_clinvar(where)
-            append_df(clinvar_df, data_frames)
-            #user_df = fetch_from_user_db(where)
-            #append_df(user_df, data_frames)
-
-            #df_joined = functools.reduce(lambda left, right: left.join(right, on=["chrom","pos","ref","alt"]), data_frames)
-          
-            df_joined = join_data_frames(data_frames, ["chrom","pos","ref","alt"])
-
-            if check_df(df_joined):
-                if "HGNC Gene Symbol" in df_joined:
-                    data_frames = [df_joined]
-                    for hgnc_symbol in df_joined["HGNC Gene Symbol"].unique():
-                        clingen_df = fetch_from_clingen(hgnc_symbol)
-                        append_df(clingen_df, data_frames)
-                        pharmgkb_df = fetch_from_pharmgkb(hgnc_symbol)
-                        append_df(pharmgkb_df, data_frames)
-                        #uniprot_df = fetch_from_uniprot(hgnc_symbol)   
-                        #append_df(uniprot_df, data_frames)   
-
-                        #df_joined = functools.reduce(lambda left, right: left.join(right, on="HGNC Gene Symbol"), data_frames)
-
-                        df_joined = join_data_frames([df_joined, pharmgkb_df, clingen_df], ["HGNC Gene Symbol"])
-
             if check_df(df_joined):
                 out_arr.append(df_joined)
 
@@ -355,3 +370,5 @@ def list_results(df):
     except Exception as err:
         err_handler(err)
         return None
+
+

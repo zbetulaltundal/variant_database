@@ -1,3 +1,11 @@
+div#variant-link, div#chrom, div#pos, div#ref, div#alt, div#HGNC-Gene-Symbol{
+  display: none !important;
+}
+
+#variant-table_info, #variant-table_paginate{
+  margin-bottom: 2em;
+}
+
 #page-container {
   position: relative;
   min-height: 100vh;
@@ -18,17 +26,30 @@
   height: 2.5rem;            /* Footer height */
 }
 
-/* #variant-table{
-    overflow-x: scroll !important;
-    display: block;
-    white-space: nowrap;
-}
-
 table, tbody, tr, td {
   margin: 0;
   padding: 0;
 }
 
+th, td { white-space: nowrap; }
+
+#variant-table_filter{
+  max-height: 200px;
+  margin-bottom: 1em;
+  box-shadow: none !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: fit-content;
+  width: fit-content;
+  padding: 10px;
+  text-align: center;
+  border-radius: .25rem;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+/* 
 table td{
     min-width: 10px;
     overflow: hidden;
@@ -42,8 +63,9 @@ table td:hover{
   height: fit-content;
   border-radius: .25rem;
   overflow: visible;
-} */
+}  */
 
+/* 
 #variant-table_wrapper .dt-button-background{
   background: none !important;
   display: none !important;
@@ -52,6 +74,12 @@ table td:hover{
 a.paginate_button{
   background: none !important;
 }
+
+
+a.paginate_button:hover{
+  color: black;
+}
+
 
 #variant-table_wrapper .dt-button-collection{
   max-height: 200px;
@@ -64,30 +92,21 @@ a.paginate_button{
   box-shadow: none !important;
   border: 1px solid #aaa;
   background: white !important;
-}
+} 
 
-#variant-table_wrapper .dt-button-collection .dt-button, #variant-table_wrapper  .dt-button-collection .dt-button:hover{
+*/
+
+/* #variant-table_wrapper .dt-button-collection .dt-button, #variant-table_wrapper  .dt-button-collection .dt-button:hover{
   border: none !important;
+} */
+
+#variant-table, table.dataTable.no-footer {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.3) !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.3) !important;
 }
 
-.button{
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: fit-content;
-  width: fit-content;
-  background: #4E9CAF;
-  padding: 10px;
-  text-align: center;
-  border-radius: .25rem;
-  color: white;
-  font-weight: bold;
-  text-decoration: none;
-}
 
-.button:hover{
-  color:#4E9CAF;
-}
+/* card page */
 
 .card{
   display: flex;
@@ -98,13 +117,4 @@ a.paginate_button{
 
 .card-header{
   background: none !important;
-}
-
-#variant-table, table.dataTable.no-footer {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.3) !important;
-  border-top: 1px solid rgba(0, 0, 0, 0.3) !important;
-}
-
-button.buttons-colvis, #variant-table_filter{
-  margin-bottom: 40px;
 }

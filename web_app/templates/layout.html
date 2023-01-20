@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8" />
-  <title>Varyant Tarayıcı|{% block title %}{% endblock %}</title>
+  <title>Varyant Veritabanı | {% block title %}{% endblock %}</title>
   <!-- Title of the web page changes dynamically  "Covid19|Home"   or   "Covid19|Global" -->
   <!-- Import the Bootstrap stylesheet -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -26,27 +26,27 @@
   <div id="page-container">
     <div id="content-wrap">
       <header>
-        <nav class=" navbar navbar-expand-lg navbar-light bg-secondary">
-          <div class="container-fluid">
+        <nav class=" navbar navbar-expand-lg navbar-light bg-light">
+          <div class="container">
             <div class="row w-100 d-flex justify-between">
-              <div class="col-8">
-                <div class="row d-flex">
-                  <a class="navbar-brand col-3 me-0 fw-bold" href="{{ url_for('home_page') }}">VARYANT TARAYICI</a>
-                  <ul class="navbar-nav col-8 pe-5 flex-row">
+              <div class="col">
+                <div class="row d-flex justify-between w-100">
+                  <a class="navbar-brand col-3 fw-bold" href="/">VARYANT VERİTABANI</a>
+                  <ul class="navbar-nav col-8 d-flex flex-row justify-content-end">
                     <li class="nav-item">
-                      <a class="nav-link fw-bold" aria-current="page" href="{{ url_for('home_page') }}">Anasayfa</a>
+                      <a class="nav-link fw-bold" aria-current="page" href="/">Anasayfa</a>
                     </li>
                     <li>
-                      <a class="nav-link fw-bold" aria-current="page" href="{{ url_for('dict_page') }}">Terimler</a>
+                      <a class="nav-link fw-bold" aria-current="page" href="/terimler">Terimler</a>
                     </li>
                     <li>
-                      <a class="nav-link fw-bold" aria-current="page" href="{{ url_for('add_data_page') }}">Yeni Varyant Kaydı</a>
+                      <a class="nav-link fw-bold" aria-current="page" href="/veri-ekle">Yeni Varyant Kaydı</a>
                     </li>
                   </ul>
               </div>
             </div>
           </div>
-        </nav>
+        </div></nav>
       </header>
 
       <div class="content-container">

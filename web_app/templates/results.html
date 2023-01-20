@@ -1,50 +1,69 @@
 {% extends "layout.html" %}
-{% block title %}Varyant Bilgisi{% endblock %}
+{% block title %}Sonuçlar{% endblock %}
 {% block content %}
 <div class="container mx-5 my-3">
-    <div class="d-flex justify-content-between">
-        <p class="col-6 fs-2 fw-bold">Tarama Sonuçları</p>
-        <a class="col-6 button" href="{{ url_for('home_page') }}">Başka bir VCF dosyası yükleyin</a>
+    <div class="row">
+    <div class="d-flex justify-content-between align-items-center ">
+        <div class="col col-6">
+        <p class="fs-2 fw-bold">Tarama Sonuçları</p></div>
+        <div class="col col-6 d-flex flex-row justify-content-end">
+            <a class="btn btn-success text-center mx-3" href="{{ url_for('home_page') }}">Başka bir VCF dosyası yükleyin</a>
+            <a class="btn btn-success text-center" href="{{url_for('download_data', df=res_df)}}">Dosyayı İndir</a>
+        </div>
+    </div>
     </div>
     <div>
-        <!-- <h6>Tarama sonuçlarını görüntülemek istediğiniz varyantın üzerine tıklayın.</h6> -->
-        <!-- <div class="row d-flex justify-content-center">
-            <ul class="list-group">
-            {% for result in results %}
-                <a href="/tarama-sonuclari/chrom={{result['chrom']}}&pos={{result['pos']}}&alt={{result['alt']}}&ref={{result['ref']}}" class="col-2 countries-card-link text-decoration-none mt-4 px-0 mx-3">
-                <li class="list-group-item">
-                    <a href="{{ url_for('variant_details', chrom=result['chrom'], pos=result['pos'], alt=result['alt'], ref=result['ref'])}}" class="col-2 text-decoration-none mt-4 px-0 mx-3">
-                        Varyant İçin Tarama Sonuçları <b>CHROM :</b> {{result["chrom"][0]}} <b>POS :</b> {{result["pos"][0]}} <b>REF :</b> {{result["ref"][0]}} <b>ALT :</b> {{result["alt"][0]}} </a>
-                </li>
-                
-            {% endfor %}
-        </ul>
-        </div> -->
-        <!-- her bir varyant için tüm columnlar + link ekle -->
-        <!-- yeni bir filtre bul columnlar için -->
-        {% if isNone %}
+        {% if res_data_flag %}
             <h6>Veri bulunamadı.</h6>
         {% else %}
-            <a class="btn btn-success mb-3" href="{{url_for('download_data')}}">Download</a>
-            <table id="variant-table" class="ms-0 py-0 display table table-hover table-bordered table-responsive">
-                <thead class="thead-dark">
-                <tr>
-                    {% for col in column_names %}
-                    <th class={{col}}>{{col}}</th>
+            <!-- <a id="update" class="btn btn-success mb-3"> update columns </a> -->
+            <h6>Görmek istediğiniz sütunun solundaki kutucuğa tıklayın ve 'filtrele' butonuna basın.</h6> 
+            
+            <div class="mb-3">
+                <!-- <button type="button" id="select-all-btn" class="mb-2 btn btn-primary">Tümünü Göster</button> -->
+                <button type="button" id="deselect-all-btn" class="mb-2 btn btn-primary">Tümünü Gizle</button>
+                <button type="button" id="filter-btn" class="mb-2 btn btn-success">Filtrele</button>
+            </div>
+            <div id="check-boxes" class="my-3 d-flex flex-wrap justify-content-between align-items-center">
+                {% for col in column_names %}
+                <div class="px-1" id={{col}}>
+                    <input type="checkbox" class="checkbox form-check-input" name={{column_names_mapper[col]}} data-column={{loop.index}}/> 
+                    <label class=" px-1 form-check-label" for={{column_names_mapper[col]}}>
+                        {{col}}
+                    </label>
+                    </div>
                     {% endfor %}
-                </tr>
+            </div>
+            <div class="container">
+                <div class="row">
+                    <p class="fst-italic">Bir sonucu detaylı görmek için en soldaki 'görüntüle' linkine tıklayın.</p>
+                </div>
+                <table id="variant-table" class="table table-striped table-bordered" cellspacing="0" width="100%">
+                    <thead class="thead-dark">
+                    <tr>
+                        <th class="variant-link" >Detaylı Bilgi</th>
+                        {% for col in column_names %}
+                        <th name={{column_names_mapper[col]}} class={{column_names_mapper[col]}}>{{col}}</th>
+                        {% endfor %}
+                        
+                    </tr>
 
-                </thead>
-                <tbody>
-                {% for key, row in res_df.iterrows() %}
-                <tr class="variant-table-row">
-                    {% for col, row_ in zip(column_names, row) %}
-                        <td>{{row_}}</td>
+                    </thead>
+                    <tbody>
+                    {% for key, row in res_df.iterrows() %}
+                    <tr class="variant-table-row">
+                            <td class="variant-link"><a href="{{ url_for('variant_details', chrom=row['chrom'], pos=row['pos'], alt=row['alt'], ref=row['ref'], hgnc=row['HGNC Gene Symbol']) }}" class="col-2 text-decoration-none mt-4 px-0 mx-3">    
+                                Görüntüle<a>
+                            </td>
+                            {% for col, row_ in zip(column_names, row) %}
+                                <td class={{column_names_mapper[col]}}>{{row_}}</td>
+                            {% endfor %}
+                        </tr>
+                    </a>
                     {% endfor %}
-                </tr>
-                {% endfor %}
-            </tbody>
-            </table> 
+                </tbody>
+                </table> 
+            </div>
         {% endif %}
     </div>
 </div>

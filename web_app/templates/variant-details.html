@@ -1,70 +1,71 @@
 {% extends "layout.html" %}
-{% block title %}Varyant Bilgisi{% endblock %}
+{% block title %} Varyant Detayları {% endblock %}
 {% block content %}
-<div class="container mx-5 my-3">
-    <div class="d-flex justify-content-between">
-        <p class="col-6 fs-2 fw-bold">Varyant Bilgisi</p>
-        <a class="col-6 button" href="{{ url_for('home_page') }}">Başka bir VCF dosyası yükleyin</a>
+<div class="container my-3">
+    <div class="d-flex align-items-center my-4 justify-content-between">
+        <h3 class="col-9 fw-bold">Varyant Detayları</h3>
+        <a class="col-3 btn btn-success text-center mx-3" href="{{ url_for('home_page') }}">Başka bir VCF dosyası yükleyin</a>
     </div>
-
-    <div class="card my-3 w-50">
-        <div class="card-body">
-          <b>CHROM :</b> {{civic["chrom"][0]}} <b>POS :</b> {{civic["pos"][0]}} <b>REF :</b> {{civic["ref"][0]}} <b>ALT :</b> {{civic["alt"][0]}} 
-        </div>
-    </div>
-    
+<div>
+    <h5><b>CHROM :</b> {{values["chrom"]}} <b>POS :</b> {{values["pos"]}} <b>REF :</b> {{values["ref"]}} <b>ALT :</b> {{values["alt"]}}</h5>
+    <h5><b> HGNC Gene Symbol: </b>{{values["hgnc"]}}</h5>
+    {% if civic_flag or clingen_flag or clinvar_flag or pharmgkb_flag %}
     <div class="container">
-        <div class="row">
-            <div class="col-sm ps-0">
-                <h3>{{civic["HGNC GENE SYMBOL"][0]}}</h3>
-                <div>Allele of the variant: {{civic["allele"][0]}}</div>
-                <div>HGVSc: {{civic["hgvsc"][0]}}</div>
-                <div>HGVSp: {{civic["hgvsp"][0]}}</div>
-                <div>CIViC Evidence Phenotypes: {{civic["CIViC Evidence Phenotypes"][0]}}</div>
-                <div>CIViC Evidence Level: {{civic["CIViC Evidence Phenotypes"][0]}}</div>
-
-                {% if clingen_flag %}    
-                    {% for key,value in clingen.iterrows() %}
-                        <h6>HGNC Gene ID(s): {{value['HGNC GENE ID']}}</h6>
+        <div class="row mt-3 d-flex justify-content-between">
+                {% if civic_flag %}
+                <div class="col-3  overflow-hidden">
+                <h6 class="fst-italic  text-decoration-underline">CIVic</h6>
+                    {% for key, row in civic.iterrows() %}
+                        {% for col, row_ in zip(civic_cols, row) %}
+                            <div><b>{{col}}:</b> {{row_}}</div>
+                        {% endfor %}
                     {% endfor %}
+                </div>
                 {% endif %}
 
-                {% if pharmgkb_flag %}    
-                    {% for key,value in pharmgkb.iterrows() %}
-                        <h6>PMID(s): {{value['PMID']}}</h6>
-                    {% endfor %}
-                {% endif %}
-            </div>
-            
-            <div class="col-sm">
-                <h6 class="text-success">Diğer veritabanlarıyla bağlantılar</h6>
-                <ul class="list-group">
-                    <li class="list-group-item"><b>ClinVar ID:</b> {{civic["ClinVar ID"][0]}}</li>
-                <li class="list-group-item">
-                    <b>CIViC Variant ID:</b> {{civic["CIViC Variant ID"][0]}} <a href="{{ civic['CIViC Entity URL'][0] }}">Link</a>
-                </li>
                 {% if clingen_flag %}    
-                <li class="list-group-item">
-                <b>ClinGen ID(s):</b>
-                    {% for key,value in clingen.iterrows() %}
-                        <b>ID:</b> {{value['HGNC GENE ID']}} <a href="{{value['CLINGEN URL']}}">Link</a>
-                    {% endfor %}</li>
+                
+                <div class="col-3 overflow-hidden">
+                <h6 class="fst-italic  text-decoration-underline">ClinGen</h6>
+                    {% for key, row in clingen.iterrows() %}
+                        {% for col, row_ in zip(clingen_cols, row) %}
+                            <div><b>{{col}}:</b> {{row_}}</div>
+                        {% endfor %}
+                    {% endfor %}
+                    
+                </div>
                 {% endif %}
                 
-                {% if pharmgkb_flag %}   
-                <li class="list-group-item">
-                <b>PharmGKB ID(s):</b>  
-                    {% for key,value in pharmgkb.iterrows() %}
-                        <b>Clinical Annotation ID:</b> {{value['clinical_annotation_id']}} <a href="{{value['evidence_url URL']}}">Link</a> 
-                    {% endfor %}</li>
+                {% if pharmgkb_flag %}  
+                
+                <div class="col-3  overflow-hidden">
+                <h6 class="fst-italic  text-decoration-underline">PharmGKB</h6> 
+                    {% for key, row in pharmgkb.iterrows() %}
+                        {% for col, row_ in zip(pharmgkb_cols, row) %}
+                            <div><b>{{col}}:</b> {{row_}}</div>
+                        {% endfor %}
+                    {% endfor %}
+                    
+                </div>
                 {% endif %}
-            </li>
-                </ul>
-            </div>
+                {% if clinvar_flag %} 
+                
+                <div class="col-3   overflow-hidden">  
+                <h6 class="fst-italic text-decoration-underline">ClinVar</h6> 
+                    {% for key, row in clinvar.iterrows() %}
+                        {% for col, row_ in zip(clinvar_cols, row) %}
+                            <div><b>{{col}}:</b> {{row_}}</div>
+                        {% endfor %}
+                    {% endfor %}
+                    
+                </div>
+                {% endif %} 
         </div>
     </div>
-
-
+    {% else %}
+        <h6>Veri bulunamadı.</h6>
+    {% endif %}
+</div>
 </div>
 
 {% endblock %}

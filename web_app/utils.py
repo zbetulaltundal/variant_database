@@ -182,3 +182,6 @@ def read_vcf_from_str(file_content):
         err_handler(err)
         return None
 
+def write_csv(df, path, index=True):
+    if os.path.exists(path): df.to_csv(path, mode="w", index=index)
+    else: df.to_csv(path, index=index)
