@@ -1,27 +1,4 @@
 
-clingen_cols = ['GENE_SYMBOL', 'HGNC_ID', 'DISEASE_LABEL', 'MONDO_DISEASE_ID', 
-    'MOI', 'SOP', 'CLASSIFICATION', 'ONLINE_REPORT', 'CLASSIFICATION_DATE', 'GCEP']
-
-# exclude CIViC_Var_Name,GN
-civic_cols = ['CHROM' ,  'POS' ,  'VAR_ID' ,  'REF' ,  'ALT' , 'QUAL', 'FILTER', 'GN', 'VT', 'Allele', 'Consequence', 'SYMBOL', 
-        'Entrez_Gene_ID', 'Feature_type', 'Feature', 'HGVSc', 'HGVSp', 'CIViC_Var_Name', 'CIViC_Var_ID', 'CIViC_Var_Aliases', 
-        'CIViC_HGVS', 'Allele_Registry_ID', 'ClinVar_ID', 'CIViC_Var_Ev_Score', 'CIViC_Ent_Type', 
-        'CIViC_Ent_ID', 'CIViC_Ent_URL', 'CIViC_Ent_Src', 'CIViC_Ent_Var_Origin', 'CIViC_Ent_Stat',
-        'CIViC_Clin_Sig', 'CIViC_Ent_Dir', 'CIViC_Ent_Disease', 'CIViC_Ent_Drugs', 'CIViC_Ent_Drug_Int', 
-        'CIViC_Ev_Phenotypes', 'CIViC_Ev_Level', 'CIViC_Ev_Rating', 'CIViC_Assertion_ACMG_Codes',
-        'CIViC_Assertion_AMP_Cat', 'CIViC_Assertion_NCCN_Guid', 'CIViC_Assertion_Regu_Appr_Guid', 
-        'CIViC_Assertion_FDA_Comp_Test_Guid']
-
-pharmgkb_cols = ["Clinical_Annotation_ID", "VARIANT", "GENE", "LEVEL_OF_EVIDENCE", "LEVEL_OVERRIDE",
-             "LEVEL_MODIFIERS", "SCORE", "PHENOTYPE_CATEGORY", "PMID_COUNT", "EVIDENCE_COUNT",
-             "LATEST_HISTORY_DATE", "pharmgkb_URL", "Specialty_Population", "Genotype",
-             "ANNOTATION_TEXT", "Allele_Function", "Evidence_ID", "Evidence_Type", "Evidence_URL", 
-             "Evidence_PMID", "Evidence_Summary", "Evidence_Score"]
-
-
-id_cols =  ['CHROM', 'POS', 'REF', 'ALT']
-
-
 pharmgkb_mapper = {
     "gene":"HGNC Gene Symbol",
     "Clinical_Annotation_ID":"Clinical Annotation ID", 
@@ -54,17 +31,13 @@ pharmgkb phenotypes
 '''
 
 civic_col_name_mapper = {
-    'gn': 'HGNC Gene Symbol', 
-    'vt': 'CIViC Variant Name', 
     'allele': 'Allele', 
-    'consequence': 'Consequence', 
-    'symbol': 'Symbol', 
+    'consequence': 'Consequence',
     'entrez_gene_id': 'Entrez Gene ID', 
     'feature_type': 'CIViC Feature Type', 
     'feature': 'CIViC Feature', 
     'hgvsc': 'HGVSc', 
     'hgvsp': 'HGVSp', 
-    'civic_variant_name': 'CIViC Variant Name', 
     'civic_variant_id': 'CIViC Variant ID', 
     'civic_variant_aliases': 'CIViC Variant Aliases',
      'civic_hgvs': 'CIViC HGVS', 
@@ -93,6 +66,12 @@ civic_col_name_mapper = {
      'var_id': 'dbSNP RefSNP ID',
      }
 
+civic_col_name_mapper2 = {
+    'gn': 'HGNC Gene Symbol', 
+    'symbol': 'HGNC Gene Symbol', 
+    "vt" : "CIViC Variant Name",
+    'civic_variant_name': 'CIViC Variant Name', 
+}
 #other_cols = ["CHROM", "POS", "REF", "ALT", "QUAL"]
 
 clingen_col_name_mapper = {

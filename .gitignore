@@ -1,5 +1,5 @@
 # created by virtualenv automatically
-.*
+.vcf
 __pycache__
 pyenv.cfg
 Lib
@@ -12,3 +12,21 @@ Temp
 dbNSFP4.3a
 env
 test_data
+./web_app/env
+./web_app/Temp
+./web_app/.vscode
+./web_app/__pycache__
+./web_app/test_data
+./web_app/pyenv.cfg
+
+./database/pyenv.cfg
+./database/__pycache__
+./database/data
+./database/db_backups/*.sql
+database/db_backups/*.sql
+./database/db_backups/**.sql
+database/db_backups/**.sql
+./database/.vscode
+./database/temp/
+./database/test_data
+database/db_backups/civic.sql

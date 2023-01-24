@@ -1,48 +1,3 @@
-// $(document).ready(function () {
-//     var table = $('#variant-table').DataTable({
-//         scrollY: '200px',
-//         paging: false,
-//     });
-
-//     $('#togglers').on('change', function (e) {
-//         e.preventDefault();
-//         var optionSelected = $("option.toggle-vis:selected", this);
-//         var valueSelected = this.value;
-//         table.columns().visible( false );
-
-//         // Get the column API object
-//         var column = table.column($(this).attr('data-column'));
-        
-//         // Toggle the visibility
-//         column.visible(true);
-//     })
-
-// });
-
-// $(document).ready(function() {
-//     var table = $('#variant-table').DataTable( {
-//         dom: 'Bfrtip',
-//         buttons: [
-//             'colvis'
-//         ],
-//         "language": {
-//             "zeroRecords": "Veri bulunamadı",
-//             "info": "_PAGES_ sayfada _PAGE_.sayfa",
-//             "infoEmpty": "Sonuç bulunamadı",
-//             "infoFiltered": "(Toplam sonuç sayısı _MAX_ )",
-//             "paginate": {
-//                 "next":       "İleri",
-//                 "previous":   "Geri"
-//             },
-//             "search":"Arama:",
-//             "lengthMenu":     " _MENU_ sayfayı göster",
-//             "loadingRecords": "Yükleniyor...",
-//         }
-//     });
-
-//     table.columns().visible( false );
-//     $(".variant-link").css("visibility", "visible");
-// } );
 
 $(function () {
     var $chk = $("#check-boxes input:checkbox"); // cache the selector
@@ -93,11 +48,6 @@ $(function () {
     });
 
     $("#filter-btn").click();
- 
-    // $("#select-all-btn").click(function () {
-    //     $chk.prop('checked', true); 
-    //     $tbl.columns().visible(true);
-    // });
 
     $("#deselect-all-btn").click(function () {
         $chk.prop('checked', false); 

@@ -3,11 +3,9 @@
 import psycopg2 as psql
 import pandas as pd
 import os
-import functools 
 from sqlalchemy import create_engine
-
+import time
 import config
-from main import app
 
 from utils import (
     err_handler,
@@ -33,7 +31,6 @@ def db_connect(db_name):
             password=config.DB_PWD
             )
 
-        print("Database connected successfully")
         return conn
     except Exception as err:
         err_handler(err)
@@ -47,6 +44,9 @@ def fetch_variant_data(chrom, pos, ref, alt, hgnc=None):
         clinvar_df = None 
         pharmgkb_df = None 
         clingen_df = None
+        uniprot_df = None
+        user_df = None
+
         where = f"WHERE ALT='{alt}' AND REF='{ref}' AND POS='{pos}' AND CHROM='{chrom}'"
         if(hgnc is None):
             civic_df = fetch_from_civic(f"WHERE ALT='{alt}' AND REF='{ref}' AND POS='{pos}' AND CHROM='{chrom}'")
@@ -57,28 +57,35 @@ def fetch_variant_data(chrom, pos, ref, alt, hgnc=None):
 
         append_df(civic_df, data_frames)
         append_df(clinvar_df, data_frames)
-        #user_df = fetch_from_user_db(where)
-        #append_df(user_df, data_frames)
+        
         if(hgnc is not None):
             df_joined = join_data_frames(data_frames, ["chrom","pos","ref","alt", "HGNC Gene Symbol"])
         else:
             df_joined = join_data_frames(data_frames, ["chrom","pos","ref","alt"])
 
+        data_frames = [df_joined]
+        user_df = fetch_from_user_db(where)
+        append_df(user_df, data_frames)
+        df_joined = join_data_frames(data_frames, ["chrom","pos","ref","alt"])
+        
         if check_df(df_joined):
             if "HGNC Gene Symbol" in df_joined:
-                data_frames = [df_joined]
                 for hgnc_symbol in df_joined["HGNC Gene Symbol"].unique():
-                    clingen_df = fetch_from_clingen(hgnc_symbol)
+                    data_frames = [df_joined]
+                    clingen_df = fetch_from_clingen(hgnc_symbol).head(1)
                     append_df(clingen_df, data_frames)
-                    pharmgkb_df = fetch_from_pharmgkb(hgnc_symbol)
+                    pharmgkb_df = fetch_from_pharmgkb(hgnc_symbol).head(1)
                     append_df(pharmgkb_df, data_frames)
-                    # uniprot_df = fetch_from_uniprot(hgnc_symbol)   
-                    # append_df(uniprot_df, data_frames)   
+                    start = time.time()
+                    uniprot_df = fetch_from_uniprot(hgnc_symbol)
+                    end = time.time()
+                    print("Uniprot fetched in ", end - start, "seconds")   
+                    append_df(uniprot_df, data_frames)   
 
-                    df_joined = join_data_frames([df_joined, pharmgkb_df, clingen_df], ["HGNC Gene Symbol"])
+                    df_joined = join_data_frames(data_frames, ["HGNC Gene Symbol"])
 
 
-        return df_joined, civic_df, clinvar_df, pharmgkb_df, clingen_df
+        return df_joined, civic_df, clinvar_df, pharmgkb_df, clingen_df, uniprot_df, user_df
     
     except Exception as err:
         err_handler(err)
@@ -118,8 +125,15 @@ def fetch_from_civic(where):
 
         if check_df(df):
             drop_cols = ["id", "info_id", "filter"]
-            if "gn" in df: drop_cols.append("Symbol")
-            if "vt" in df: drop_cols.append("CIViC Variant Name")
+            if "gn" in df: 
+                civic_col_name_mapper["gn"] = "HGNC Gene Symbol"
+                drop_cols.append("symbol")
+            else: civic_col_name_mapper["symbol"] = "HGNC Gene Symbol"
+            if "vt" in df: 
+                civic_col_name_mapper["vt"] = "CIViC Variant Name"
+                drop_cols.append("civic_variant_name")
+            else: civic_col_name_mapper['civic_variant_name'] = 'CIViC Variant Name'
+
             df.rename(columns = civic_col_name_mapper, inplace = True)
             df.drop(columns=drop_cols, inplace=True)
 
@@ -178,9 +192,9 @@ def fetch_from_uniprot(hgnc_gene_symbol):
     try:
         where = f"where gene_name = '{hgnc_gene_symbol}'"
         engine = create_engine(f"{config.DB_STRING}/{config.UNIPROT_DB_NAME}")
-        df = fetch_from_psql_db_df(engine,f"SELECT * FROM variant {where}", uniprot_col_mapper)
-        evidence_df = fetch_from_psql_db_df(engine,f"SELECT variant_id,evidence_name FROM evidence  where VARIANT_ID in (select id from variant {where})")
-        
+        df = fetch_from_psql_db_df(engine,f"SELECT * FROM variant {where}")
+        evidence_df = fetch_from_psql_db_df(engine,f"SELECT variant_id,evidence_name FROM evidence  where VARIANT_ID in (select id from variant {where})", {"evidence_name":"Uniprot Evidence Names"})
+        df.rename(columns=uniprot_col_mapper, inplace=True)
         if check_df(evidence_df): 
             evidence_df.dropna(inplace=True)
             evidence_df = (evidence_df.groupby(['variant_id']).agg({'Uniprot Evidence Names': lambda x: None if x is None else",".join(x)}).reset_index())
@@ -277,7 +291,8 @@ def fetch_from_clinvar(where, hgnc=None):
         
         if(hgnc is not None):
             df_joined = df_joined[df_joined['HGNC Gene Symbol']==hgnc]
-            print(df_joined)
+
+
 
         return df_joined
     except Exception as err:
@@ -297,7 +312,7 @@ def get_col_name(s):
         err_handler(err)
         return None 
 
-def fetch_from_user_db(where):
+def fetch_from_user_db(where=''):
     try:
         q = f"select * from variant {where}"
         engine = create_engine(f"{config.DB_STRING}/{config.USER_DB_NAME}")
@@ -312,6 +327,7 @@ def fetch_from_user_db(where):
                 split_info[indx] = val
 
             df[info_cols] = split_info
+            df.drop(columns=["id", "var_id", "qual", "filter","info"], inplace=True)
             return df
     except Exception as err:
         err_handler(err)
@@ -326,7 +342,7 @@ def insert_data(df):
         conn = psql.connect(f"{config.DB_STRING}/{config.USER_DB_NAME}")
         cur = conn.cursor()
 
-        query = f'''COPY VARIANT(CHROM,POS,VAR_ID,REF,ALT,QUAL,FILTER,INFO)
+        query = f'''COPY VARIANT (CHROM,POS,REF,ALT,INFO)
             FROM '{fpath}'
             DELIMITER ','
             CSV HEADER; '''
@@ -359,16 +375,15 @@ def list_results(df):
             REF = row['REF']
             POS = row['POS']
             
-            df_joined, _r1, _r2, _r3, _r4 = fetch_variant_data(CHROM, POS, REF, ALT)
-            
+            df_joined, _r1, _r2, _r3, _r4, _r5, _r6 = fetch_variant_data(CHROM, POS, REF, ALT)
+
             if check_df(df_joined):
                 out_arr.append(df_joined)
 
-        res_df = pd.concat(out_arr)
+        if len(out_arr) != 0: res_df = pd.concat(out_arr)
+        else: res_df = None  
         return res_df
     
     except Exception as err:
         err_handler(err)
         return None
-
-

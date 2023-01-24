@@ -49,57 +49,6 @@ th, td { white-space: nowrap; }
   text-decoration: none;
 }
 
-/* 
-table td{
-    min-width: 10px;
-    overflow: hidden;
-    transition: all 0.2s ease-out;
-}
-
-table td:hover{
-  box-shadow: #5b5b5b 0px 0px 5px 0px;
-  width: fit-content;
-  max-width: max-content;
-  height: fit-content;
-  border-radius: .25rem;
-  overflow: visible;
-}  */
-
-/* 
-#variant-table_wrapper .dt-button-background{
-  background: none !important;
-  display: none !important;
-}
-
-a.paginate_button{
-  background: none !important;
-}
-
-
-a.paginate_button:hover{
-  color: black;
-}
-
-
-#variant-table_wrapper .dt-button-collection{
-  max-height: 200px;
-  overflow-y: scroll;
-  box-shadow: none !important;
-  border: none !important;
-}
-
-#variant-table_wrapper .dt-button{
-  box-shadow: none !important;
-  border: 1px solid #aaa;
-  background: white !important;
-} 
-
-*/
-
-/* #variant-table_wrapper .dt-button-collection .dt-button, #variant-table_wrapper  .dt-button-collection .dt-button:hover{
-  border: none !important;
-} */
-
 #variant-table, table.dataTable.no-footer {
   border-bottom: 1px solid rgba(0, 0, 0, 0.3) !important;
   border-top: 1px solid rgba(0, 0, 0, 0.3) !important;

@@ -7,7 +7,6 @@ datetime
 Werkzeug
 scikit-allel
 sqlalchemy
-timeit
 ###### Requirements with Version Specifiers ######
 
 

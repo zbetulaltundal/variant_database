@@ -1,11 +1,13 @@
 
 from flask import render_template, request, flash, send_file
 import timeit 
+import pandas as pd
+import io 
 
 # custom modules
 
 from db_utils import(
-    
+    fetch_from_user_db,
     list_results,
     insert_data,
     fetch_variant_data
@@ -17,8 +19,7 @@ from utils import(
     excel_to_df,
     read_vcf_from_str,
     check_df,
-    join_data_frames,
-    write_csv
+    write_vcf
 )
 
 import config
@@ -29,11 +30,8 @@ def variant_details(chrom, pos, alt, ref, hgnc=None):
     try:
         # tüm özellikleri listele, bir kısmını topluca yukarda, 
         # bazılarını dblere göre kategorize edip aşağıda 
-        df_joined, civic_df, clinvar_df, pharmgkb_df, clingen_df = fetch_variant_data(chrom, pos, ref, alt, hgnc)
-        cols = df_joined.columns
-        mapper = dict()
-        for col in cols:
-            mapper[col] = col.replace(" ", "-")   
+        
+        df_joined, civic_df, clinvar_df, pharmgkb_df, clingen_df,uniprot_df, user_df = fetch_variant_data(chrom, pos, ref, alt, hgnc)
 
         values = dict(
             chrom=chrom,
@@ -42,33 +40,29 @@ def variant_details(chrom, pos, alt, ref, hgnc=None):
             alt=alt,
             hgnc=hgnc
         )   
-        
         clingen_flag=check_df(clingen_df)
         civic_flag=check_df(civic_df)
         clinvar_flag=check_df(clinvar_df)
         pharmgkb_flag=check_df(pharmgkb_df)
+        uniprot_flag=check_df(uniprot_df)
+        user_flag=check_df(user_df)
 
         civic_cols = civic_df.columns if civic_flag else None
         clinvar_cols = clinvar_df.columns if clinvar_flag else None
         clingen_cols = clingen_df.columns if clingen_flag else None
         pharmgkb_cols = pharmgkb_df.columns if pharmgkb_flag else None
         clinvar_cols = clinvar_df.columns if clinvar_flag else None
+        uniprot_cols = uniprot_df.columns if uniprot_flag else None
+        user_cols = user_df.columns if user_flag else None
 
-        return render_template('variant-details.html',
+        return render_template('user-variant-details.html',
             values=values,
-            civic=civic_df, 
-            civic_cols=civic_cols,
-            clinvar_cols=clinvar_cols,
-            clingen_cols=clingen_cols,
-            pharmgkb_cols=pharmgkb_cols,
-            clingen=clingen_df, 
-            clinvar=clinvar_df, 
-            pharmgkb=pharmgkb_df, 
-            clingen_flag=clingen_flag,
-            civic_flag=civic_flag,
-            clinvar_flag=clinvar_flag,
-            pharmgkb_flag=pharmgkb_flag,
-            df=df_joined, zip=zip)
+            civic=civic_df, clingen=clingen_df, clinvar=clinvar_df, 
+            pharmgkb=pharmgkb_df, user=user_df, uniprot=uniprot_df,
+            civic_cols=civic_cols, clingen_cols=clingen_cols, clinvar_cols=clinvar_cols, 
+            pharmgkb_cols=pharmgkb_cols, user_cols=user_cols, uniprot_cols=uniprot_cols,
+            civic_flag=civic_flag, clingen_flag=clingen_flag,clinvar_flag=clinvar_flag,
+            pharmgkb_flag=pharmgkb_flag, user_flag=user_flag, uniprot_flag=uniprot_flag, zip=zip)
 
     except Exception as err:
         err_handler(err)
@@ -81,7 +75,7 @@ def upload_vcf_file():
         if request.method == 'POST':
             file = request.files['vcf_file']
             if file.filename == '':
-                flash('Please select a file')
+                flash('Lütfen bir dosya seçiniz.')
             elif file and allowed_file(file.filename):
                 content = file.read() 
                 if(content == b''b''): 
@@ -90,14 +84,14 @@ def upload_vcf_file():
                 file_content = content.decode("utf-8")
                 input_vcf_df = read_vcf_from_str(file_content)
                 if input_vcf_df is None:  
-                    flash('Uploaded file is empty.')
+                    flash('Yüklediğiniz dosyada veri bulunamadı.')
                 else:
-                    t_0 = timeit.default_timer()
                     res_df = list_results(input_vcf_df)
                     is_none = not check_df(res_df)
                     if is_none == False:        
-                        path = 'Temp\\results.csv'
-                        write_csv(res_df, path)
+                        trimmed_results_df = res_df.head(50)
+                        path = 'Temp\\results.vcf'
+                        write_vcf(res_df, path)
                         cols = res_df.columns
                         mapper = dict()
                         for col in cols:
@@ -107,15 +101,10 @@ def upload_vcf_file():
                                 column_names=cols, 
                                 column_names_mapper=mapper, 
                                 is_none=is_none, 
-                                res_df=res_df, zip=zip)
+                                res_df=trimmed_results_df, zip=zip)
 
-                    t_1 = timeit.default_timer()
-                    
-                    elapsed_time = round((t_1 - t_0) * 10 ** 9, 3)
-
-                    print(f"results fetched in {elapsed_time} ms")
             else:
-                flash('Only vcf files are allowed')
+                flash('Lütfen VCF uzantılı bir dosya yükleyin.')
         
         return render_template('results.html', res_df=None, column_names=None, is_none=True)
 
@@ -124,43 +113,108 @@ def upload_vcf_file():
         return render_template('results.html', res_df=None, column_names=None, is_none=True)
 
 def home_page():
-    print("in home_page")
     return render_template("home.html")
 
 def add_data_page():
-    print("in add_data page")
-    return render_template("veri-ekle.html")
+    return render_template("insert-data.html")
+
+def userdb_variants():
+    
+    try:
+        df = fetch_from_user_db()
+        cols = df.columns
+        mapper = dict()
+        is_none = not check_df(df)
+        for col in cols:
+            mapper[col] = col.replace(" ", "-")
+        
+        return render_template('userdb.html',
+                column_names=cols, 
+                column_names_mapper=mapper, 
+                is_none=is_none, 
+                df=df, zip=zip)
+
+    except Exception as err:
+        err_handler(err)
+        return render_template('userdb.html',
+                column_names=None, 
+                column_names_mapper=None, 
+                is_none=True, 
+                df=None, zip=zip)
+
+def user_variant_details(chrom, pos, alt, ref, hgnc=None):
+    try:
+        # tüm özellikleri listele, bir kısmını topluca yukarda, 
+        # bazılarını dblere göre kategorize edip aşağıda 
+        where = f"WHERE ALT='{alt}' AND REF='{ref}' AND POS='{pos}' AND CHROM='{chrom}'"
+        res = fetch_from_user_db(where)
+
+        values = dict(
+            chrom=res.loc[0]['chrom'],
+            pos=res.loc[0]['pos'],
+            ref=res.loc[0]['ref'],
+            alt=res.loc[0]['alt']
+        )   
+        hgnc_flag = False
+        if "GN" in res: hgnc=res.loc[0]["GN"]
+        if "Symbol" in res: hgnc=res.loc[0]["GN"]
+        if hgnc is not None: 
+            values["hgnc"] = hgnc
+            hgnc_flag = True
+
+        user_flag =check_df(res)
+        user_cols = res.columns if user_flag else None
+
+        return render_template('userdb-variant-details.html',
+            values=values, hgnc_flag = hgnc_flag,
+            df=res, user_cols=user_cols, user_flag=user_flag, zip=zip)
+
+    except Exception as err:
+        err_handler(err)
+        return render_template('userdb.html',
+                column_names=None, 
+                column_names_mapper=None, 
+                is_none=True, 
+                df=None, zip=zip)
+
 
 def add_data():
     try:
-        print("in add_data")
         if request.method == 'POST':
             file = request.files['insert_vcf_file']
             if file.filename == '':
                 flash('Lütfen bir dosya seçiniz.')
-                return render_template("veri-ekle.html")
+                return render_template("insert-data.html")
             elif file and allowed_file(file.filename):
                 content = file.stream.read() 
                 if(content == b''b''):
                     flash('Yüklediğiniz dosyada veri bulunamadı.')
-                    return render_template("veri-ekle.html")
+                    return render_template("insert-data.html")
                 
                 file_content = content.decode("utf-8")
-                input_vcf_df = read_vcf_from_str(file_content)
+                lines = [l for l in io.StringIO(file_content) if not l.startswith('#')]
+                input_vcf_df = pd.read_csv(
+                    io.StringIO(''.join(lines)),
+                    names=["CHROM", "POS", "REF", "ALT", "INFO"], 
+                    header=None,
+                    dtype={'#CHROM': str, 'POS': int, 'REF': str, 'ALT': str, 'INFO': str},
+                    sep='\t'
+                ).rename(columns={'#CHROM': 'CHROM'})
+
                 if input_vcf_df is None:  
                     flash('Yüklediğiniz dosyada veri bulunamadı')
-                    return render_template("veri-ekle.html")
+                    return render_template("insert-data.html")
                 if insert_data(input_vcf_df) == True:            
                     flash('Dosya başarıyla veritabanına eklendi.')
-                    return render_template("veri-ekle.html")
-                else: return render_template("veri-ekle.html")
+                    return render_template("insert-data.html")
+                else: return render_template("insert-data.html")
             else:
                 flash('Lütfen VCF uzantılı bir dosya yükleyin.')
-                return render_template("veri-ekle.html")
-        else: return render_template("veri-ekle.html")
+                return render_template("insert-data.html")
+        else: return render_template("insert-data.html")
     except Exception as err:
         err_handler(err)
-        return render_template("veri-ekle.html")
+        return render_template("insert-data.html")
 
 def dict_page():
     nomenc = excel_to_df(config.DICT_EXCEL_PATH)
@@ -170,5 +224,5 @@ def dict_page():
 
 def download_data():
     
-    path = 'Temp\\results.csv'
+    path = 'Temp\\results.vcf'
     return send_file(path, as_attachment=True)

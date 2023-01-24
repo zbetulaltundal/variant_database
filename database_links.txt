@@ -1,0 +1,5 @@
+ClinVar	 https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz	
+UniProt Variants	https://ftp.uniprot.org/pub/databases/uniprot/knowledgebase/variants/homo_sapiens_variation.txt.gz	
+ClinGen	https://search.clinicalgenome.org/kb/gene-validity/download	
+CIViC	https://civicdb.org/downloads/nightly/nightly-civic_accepted_and_submitted.vcf	
+PharmGKB	https://api.pharmgkb.org/v1/download/file/data/clinicalAnnotations.zip	

@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+{% block title %} Varyant Detayları {% endblock %}
+{% block content %}
+<div class="container my-3">
+    <div class="d-flex align-items-center my-4 justify-content-between">
+        <h3 class="col-9 fw-bold">Varyant Detayları</h3>
+        <a class="col-3 btn btn-success text-center mx-3" href="{{ url_for('userdb_variants') }}">Önceki Sayfa</a>
+    </div>
+<div>
+    <h5><b>CHROM :</b> {{values["chrom"]}} <b>POS :</b> {{values["pos"]}} <b>REF :</b> {{values["ref"]}} <b>ALT :</b> {{values["alt"]}}</h5>
+    {% if hgnc_flag %} 
+        <h5><b> HGNC Gene Symbol: </b>{{values["hgnc"]}}</h5>
+    {% endif %}
+    {% if user_flag %} 
+    <div class="container">
+        <div class="row mt-3 d-flex justify-content-between">
+                <div class="col overflow-hidden">  
+                <h6 class="fst-italic text-decoration-underline">Kullanıcı Veritabanı</h6> 
+                    {% for key, row in df.iterrows() %}
+                        {% for col, row_ in zip(user_cols, row) %}
+                            <div><b>{{col}}:</b> {{row_}}</div>
+                        {% endfor %}
+                    {% endfor %}
+                    
+                </div>
+        </div>
+    </div>
+    {% else %}
+        <h6>Veri bulunamadı.</h6>
+    {% endif %}
+</div>
+</div>
+
+{% endblock %}

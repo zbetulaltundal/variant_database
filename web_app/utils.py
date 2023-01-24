@@ -1,10 +1,11 @@
 
 import pandas as pd
 from asyncio.windows_events import NULL
-import psycopg2 as psql
 import config
 import sys
 import os
+from datetime import datetime
+import io
 
 def err_handler(err):
     print ("Exception has occured:", err)
@@ -19,13 +20,6 @@ def err_handler(err):
     print("in file:", fname)
     print ("\nERROR:", err, "on line number:", line_num)
     print ("traceback:", traceback, "-- type:", err_type)
-
-def print_list(a):
-    """ Prints out elements in given list to the console 
-    a: a python list
-    """
-    for x in range(len(a)):
-        print(a[x])
 
 def is_iterable(var):
     try:
@@ -110,15 +104,6 @@ def record_cmpr(rec1, rec2):
     
     return False
 
-import io
-from typing import Literal
-import numpy as np
-import pandas as pd
-
-# custom modules
-
-from utils import err_handler
-
 def join_data_frames(data_frames, join_cols=[], join_type='inner'):
     try:
         first_iter = True
@@ -183,5 +168,35 @@ def read_vcf_from_str(file_content):
         return None
 
 def write_csv(df, path, index=True):
-    if os.path.exists(path): df.to_csv(path, mode="w", index=index)
-    else: df.to_csv(path, index=index)
+    try:
+        df_cols = []
+        if "CHROM" in df: df_cols.append("CHROM")
+        if "POS" in df: df_cols.append("POS")
+        if "REF" in df: df_cols.append("REF")
+        if "ALT" in df: df_cols.append("ALT")
+        if "INFO" in df: df_cols.append("INFO")
+        df = df[df_cols].copy()
+        if os.path.exists(path): df.to_csv(path, mode="w", index=index)
+        else: df.to_csv(path, index=index)
+    except Exception as err:
+        err_handler(err)
+        return None
+
+def write_vcf(df, path):
+    try:
+        date = datetime.now()
+        date = date.strftime("%d/%m/%y")
+        header = f"""##fileformat=VCFv4.1
+            ##fileDate={date}
+            ##source=variant-database
+            ##reference=file:///seq/references/
+            #CHROM	    POS 	REF 	ALT 	INFO
+        """
+
+        with open(path, 'w') as vcf:
+            vcf.write(header)
+
+        df.to_csv(path, sep="\t", mode='a', index=False)
+    except Exception as err:
+        err_handler(err)
+        return None
