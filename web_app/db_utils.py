@@ -322,12 +322,22 @@ def fetch_from_user_db(where=''):
             info_cols = []
             split_info = df['info'].str.split(';', expand=True)
             for indx, pair in split_info.items():
-                key, val = pair[0].split("=")
+                if pair is None or pair[0] is None: continue
+                res = pair[0].split("=")
+                if len(res) == 1: 
+                    key = res
+                    val = ""
+                elif len(res) == 2: 
+                    key, val = res
+                else: 
+                    key = res
+                    val = ""
                 info_cols.append(key)
                 split_info[indx] = val
 
             df[info_cols] = split_info
             df.drop(columns=["id", "var_id", "qual", "filter","info"], inplace=True)
+            df = df.drop_duplicates(subset=["chrom", "pos", "alt", "ref"])
             return df
     except Exception as err:
         err_handler(err)
@@ -380,7 +390,10 @@ def list_results(df):
             if check_df(df_joined):
                 out_arr.append(df_joined)
 
-        if len(out_arr) != 0: res_df = pd.concat(out_arr)
+        if len(out_arr) != 0: 
+            res_df = pd.concat(out_arr)
+            if res_df is not None:
+                res_df = res_df.drop_duplicates(subset=["chrom", "pos", "ref", "alt"])
         else: res_df = None  
         return res_df
     

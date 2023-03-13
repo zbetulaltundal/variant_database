@@ -122,6 +122,13 @@ def userdb_variants():
     
     try:
         df = fetch_from_user_db()
+        if df is None: 
+            return render_template('userdb.html',
+                    column_names=None, 
+                    column_names_mapper=None, 
+                    is_none=True, 
+                    df=None, zip=zip) 
+        
         cols = df.columns
         mapper = dict()
         is_none = not check_df(df)
@@ -192,10 +199,14 @@ def add_data():
                     return render_template("insert-data.html")
                 
                 file_content = content.decode("utf-8")
-                lines = [l for l in io.StringIO(file_content) if not l.startswith('#')]
+                lines = [l for l in io.StringIO(file_content) if not l.startswith('##')]
+                headers = lines[0]
+                headers = headers.split("\t")
+                headers = [header.strip().upper() for header in headers]
+                lines = lines[1:]
                 input_vcf_df = pd.read_csv(
                     io.StringIO(''.join(lines)),
-                    names=["CHROM", "POS", "REF", "ALT", "INFO"], 
+                    names=headers, 
                     header=None,
                     dtype={'#CHROM': str, 'POS': int, 'REF': str, 'ALT': str, 'INFO': str},
                     sep='\t'

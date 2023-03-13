@@ -1,11 +1,9 @@
 
 import db_config
-import psycopg2 as psql
 import os
 from zipfile import ZipFile
 from utils import err_handler
 from db_utils import db_connect
-import db_config
 
 def search_db(db_list, db_name):
 
@@ -41,7 +39,7 @@ if __name__ == "__main__":
             res = search_db(db_list, db_name)
             if res == False: 
                 cur.execute(f"create database {db_name};")
-            
+
         conn.commit()
         if conn:
             conn.close()
@@ -54,7 +52,8 @@ if __name__ == "__main__":
         for db_name in db_config.DB_NAMES: 
             extract_zip(db_name)
             os.system(f''' pg_restore --no-owner --dbname=postgresql://postgres:test@localhost:5432/{db_name} -v \
-                    .\db_backups\{db_name}.sql''')
+                    .\\temp\\{db_name}.sql''')
+
 
     except Exception as err:
         err_handler(err)

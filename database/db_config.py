@@ -7,6 +7,7 @@ CIVIC_DB_NAME ='civic'
 CLINVAR_DB_NAME ='clinvar'
 PHARMGKB_DB_NAME ='pharmgkb'
 UNIPROTVAR_DB_NAME ='uniprot'
+USER_DB_NAME ='userdb'
 PORT_NAME = '5432'
 DB_STRING = f"postgresql://{DB_USER}:{DB_PWD}@{DB_HOST}:{PORT_NAME}"
 
